@@ -1,23 +1,19 @@
-#!/usr/bin/env python3
+from __future__ import print_function
+import logging
 
-# Import of python system library.
-# This library is used to download the 'index.html' from server.
-# You don't have to install anything special, this library is installed with Python.
-import urllib.request
+import grpc
 
-# This variable contain the request on 'http://localhost:1234/'.
-# You must wondering what is 'http://localhost:1234'?
-# localhost: This means that the server is local.
-# 1234: Remember we define 1234 as the server port.
-fp = urllib.request.urlopen("http://localhost:1234/")
+import helloworld_pb2
+import helloworld_pb2_grpc
 
-# 'encodedContent' correspond to the server response encoded ('index.html').
-# 'decodedContent' correspond to the server response decoded (what we want to display).
-encodedContent = fp.read()
-decodedContent = encodedContent.decode("utf8")
+def run():
+    # NOTE(gRPC Python Team): .close() is possible on a channel and should be
+    # used in circumstances in which the with statement does not fit the needs
+    # of the code.
+    with grpc.insecure_channel('localhost:1234') as channel:
+        stub = helloworld_pb2_grpc.GreeterStub(channel)
+        response = stub.SayHello(helloworld_pb2.HelloRequest(name='I am inclined to think this works'))
+    print("Greeter client received: " + response.message)
 
-# Display the server file: 'index.html'.
-print(decodedContent)
-
-# Close the server connection.
-fp.close()
+logging.basicConfig()
+run()

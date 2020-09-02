@@ -3,6 +3,8 @@
 # In our example, we want to import the python image (from DockerHub).
 # So, we write 'python' for the image name and 'latest' for the version.
 FROM python:latest
+ADD requirements.txt .
+RUN pip3 install -r requirements.txt
 
 # In order to launch our python code, we must import the 'server.py' and 'index.html' file.
 # We use the keyword 'ADD' to do that.
@@ -10,7 +12,8 @@ FROM python:latest
 # The second parameter '/server/' is the path where to put the file on the image.
 # Here we put files at the image '/server/' folder.
 ADD server.py /server/
-ADD index.html /server/
+ADD helloworld_pb2.py /server/
+ADD helloworld_pb2_grpc.py /server/
 
 # I would like to introduce something new, the 'WORKDIR' command.
 # This command changes the base directory of your image.

@@ -1,16 +1,22 @@
-#!/usr/bin/env python3
+from concurrent import futures
+import logging
 
-# Import of python system libraries.
-# These libraries will be used to create the web server.
-# You don't have to install anything special, these libraries are installed with Python.
-import http.server
-import socketserver
+import grpc
 
-# This variable is going to handle the requests of our client on the server.
-handler = http.server.SimpleHTTPRequestHandler
+import helloworld_pb2
+import helloworld_pb2_grpc
 
-# Here we define that we want to start the server on port 1234. 
-# Try to remember this information it will be very useful to us later with docker-compose.
-with socketserver.TCPServer(("", 1234), handler) as httpd:
-    # This instruction will keep the server running, waiting for requests from the client.
-    httpd.serve_forever()
+class Greeter(helloworld_pb2_grpc.GreeterServicer):
+
+    def SayHello(self, request, context):
+        return helloworld_pb2.HelloReply(message='Hello, %s!' % request.name)
+
+def serve():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
+    server.add_insecure_port('[::]:1234')
+    server.start()
+    server.wait_for_termination()
+
+logging.basicConfig()
+serve()
