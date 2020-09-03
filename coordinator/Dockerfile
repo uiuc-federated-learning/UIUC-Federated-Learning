@@ -4,12 +4,12 @@ ADD requirements.txt .
 RUN pip3 install -r requirements.txt
 
 # Same thing than the 'server' Dockerfile.
-# We import 'client.py' in '/client/' folder.
-ADD client.py /client/
-ADD helloworld_pb2.py /client/
-ADD helloworld_pb2_grpc.py /client/
+# We import 'coordinator.py' in '/coordinator/' folder.
+ADD coordinator.py /coordinator/
+ADD helloworld_pb2.py /coordinator/
+ADD helloworld_pb2_grpc.py /coordinator/
 
 # I would like to introduce something new, the 'WORKDIR' command.
 # This command changes the base directory of your image.
-# Here we define '/client/' as base directory.
-WORKDIR /client/
+# Here we define '/coordinator/' as base directory.
+WORKDIR /coordinator/

@@ -14,17 +14,17 @@ services:
   # Here you are free to choose the keyword.
   # It will allow you to define what the service corresponds to.
   # We use the keyword 'server' for the server.
-  server:
+  hospital_1:
     # The keyword "build" will allow you to define
     # the path to the Dockerfile to use to create the image
     # that will allow you to execute the service.
     # Here 'server/' corresponds to the path to the server folder
     # that contains the Dockerfile to use.
-    build: server/
+    build: hospital/
 
     # The command to execute once the image is created.
     # The following command will execute "python ./server.py".
-    command: python ./server.py
+    command: python ./hospital.py
 
     # Remember that we defined in'server/server.py' 1234 as port.
     # If we want to access the server from our computer (outside the container),
@@ -36,17 +36,63 @@ services:
     # we broadcast the server).
     ports:
       - 1234:1234
+  
+  hospital_2:
+    # The keyword "build" will allow you to define
+    # the path to the Dockerfile to use to create the image
+    # that will allow you to execute the service.
+    # Here 'server/' corresponds to the path to the server folder
+    # that contains the Dockerfile to use.
+    build: hospital/
+
+    # The command to execute once the image is created.
+    # The following command will execute "python ./server.py".
+    command: python ./hospital.py
+
+    # Remember that we defined in'server/server.py' 1234 as port.
+    # If we want to access the server from our computer (outside the container),
+    # we must share the content port with our computer's port.
+    # To do this, the keyword 'ports' will help us.
+    # Its syntax is as follows: [port we want on our machine]:[port we want to retrieve in the container]
+    # In our case, we want to use port 1234 on our machine and
+    # retrieve port 1234 from the container (because it is on this port that
+    # we broadcast the server).
+    ports:
+      - 1235:1234
+
+  hospital_3:
+    # The keyword "build" will allow you to define
+    # the path to the Dockerfile to use to create the image
+    # that will allow you to execute the service.
+    # Here 'server/' corresponds to the path to the server folder
+    # that contains the Dockerfile to use.
+    build: hospital/
+
+    # The command to execute once the image is created.
+    # The following command will execute "python ./server.py".
+    command: python ./hospital.py
+
+    # Remember that we defined in'server/server.py' 1234 as port.
+    # If we want to access the server from our computer (outside the container),
+    # we must share the content port with our computer's port.
+    # To do this, the keyword 'ports' will help us.
+    # Its syntax is as follows: [port we want on our machine]:[port we want to retrieve in the container]
+    # In our case, we want to use port 1234 on our machine and
+    # retrieve port 1234 from the container (because it is on this port that
+    # we broadcast the server).
+    ports:
+      - 1236:1234
 
   # Second service (container): the client.
   # We use the keyword 'client' for the server.
-  client:
+  coordinator:
     # Here 'client/ corresponds to the path to the client folder
     # that contains the Dockerfile to use.
-    build: client/
+    build: coordinator/
 
     # The command to execute once the image is created.
     # The following command will execute "python ./client.py".
-    command: python ./client.py
+    command: python ./coordinator.py
 
     # The keyword 'network_mode' is used to define the network type.
     # Here we define that the container can access to the 'localhost' of the computer.
@@ -56,4 +102,6 @@ services:
     # should wait until other services are ready before launching.
     # Here, we want the 'client' service to wait until the 'server' service is ready.
     depends_on:
-      - server
+      - hospital_1
+      - hospital_2
+      - hospital_3
