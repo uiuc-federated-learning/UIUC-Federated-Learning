@@ -11,6 +11,9 @@ RUN pip3 install -r requirements.txt
 # Just a remember, the first parameter 'hospital.py' is the name of the file on the host.
 # The second parameter '/hospital/' is the path where to put the file on the image.
 # Here we put files at the image '/hospital/' folder.
+
+ADD src /hospital/src
+ADD config.json /hospital/
 ADD hospital.py /hospital/
 ADD helloworld_pb2.py /hospital/
 ADD helloworld_pb2_grpc.py /hospital/

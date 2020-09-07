@@ -5,6 +5,8 @@ RUN pip3 install -r requirements.txt
 
 # Same thing than the 'server' Dockerfile.
 # We import 'coordinator.py' in '/coordinator/' folder.
+ADD src /coordinator/src
+ADD config.json /coordinator/
 ADD coordinator.py /coordinator/
 ADD helloworld_pb2.py /coordinator/
 ADD helloworld_pb2_grpc.py /coordinator/
