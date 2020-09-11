@@ -78,20 +78,20 @@ parser.add_argument('--global_print_frequency', type=int, default=1, help="frequ
 parser.add_argument('--global_store_frequency', type=int, default=100, help="frequency after which global results should be written to CSV")
 parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
 
-obj = parser.parse_args()
+parameters = parser.parse_args()
 
 with open('config.json') as f:
 	json_vars = json.load(f)
 
-obj = vars(obj)
-obj.update(json_vars)
-print(obj)
+parameters = vars(parameters)
+parameters.update(json_vars)
+print(parameters)
 
-np.random.seed(obj['seed'])
-torch.manual_seed(obj['seed'])
+np.random.seed(parameters['seed'])
+torch.manual_seed(parameters['seed'])
 
 ############################### Loading Dataset ###############################
-if obj['data_source'] == 'MNIST':
+if parameters['data_source'] == 'MNIST':
 	data_dir = 'data/'
 	transformation = transforms.Compose([
 		transforms.ToTensor(), 
@@ -99,31 +99,31 @@ if obj['data_source'] == 'MNIST':
 	])
 	train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transformation)
 	test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transformation)
-	print("Train and Test Sizes for %s - (%d, %d)"%(obj['data_source'], len(train_dataset), len(test_dataset)))
+	print("Train and Test Sizes for %s - (%d, %d)"%(parameters['data_source'], len(train_dataset), len(test_dataset)))
 	
 ################################ Sampling Data ################################
-if obj['sampling'] == 'iid':
-	user_groups = iid(train_dataset, obj['num_users'], obj['seed'])
+if parameters['sampling'] == 'iid':
+	user_groups = iid(train_dataset, parameters['num_users'], parameters['seed'])
 else:
-	user_groups = non_iid(train_dataset, obj['num_users'], obj['num_shards_user'], obj['seed'])
+	user_groups = non_iid(train_dataset, parameters['num_users'], parameters['num_shards_user'], parameters['seed'])
 
 ################################ Defining Model ################################
-if obj['model'] == 'LR':
-	global_model = LR(dim_in=28*28, dim_out=10, seed=obj['seed'])
-elif obj['model'] == 'MLP':
-	global_model = MLP(dim_in=28*28, dim_hidden=200, dim_out=10, seed=obj['seed'])
-elif obj['model'] == 'CNN' and obj['data_source'] == 'MNIST':
-	global_model = CNNMnist(obj['seed'])
+if parameters['model'] == 'LR':
+	global_model = LR(dim_in=28*28, dim_out=10, seed=parameters['seed'])
+elif parameters['model'] == 'MLP':
+	global_model = MLP(dim_in=28*28, dim_hidden=200, dim_out=10, seed=parameters['seed'])
+elif parameters['model'] == 'CNN' and parameters['data_source'] == 'MNIST':
+	global_model = CNNMnist(parameters['seed'])
 else:
 	raise ValueError('Check the model and data source provided in the arguments.')
 
-print("Number of parameters in %s - %d."%(obj['model'], network_parameters(global_model)))
+print("Number of parameters in %s - %d."%(parameters['model'], network_parameters(global_model)))
 
-global_model.to(obj['device'])
+global_model.to(parameters['device'])
 global_model.train()
 
 global_weights = global_model.state_dict() # Setting the initial global weights
-alpha=obj['global_momentum_param']
+alpha=parameters['global_momentum_param']
 ############################ Initializing Placeholder ############################
 
 # Momentum parameter 'v' for FedAvgM & `m` for FedAdam & FedYogi
@@ -140,15 +140,15 @@ for k in global_weights.keys():
 
 ################################ Defining Model ################################
 
-#with open('results/%s_input.json'%(obj['exp_name']), 'w') as f:
-#	json.dump(obj, f, indent=4)
+#with open('results/%s_input.json'%(parameters['exp_name']), 'w') as f:
+#	json.dump(parameters, f, indent=4)
 
 train_loss_updated = []
 train_loss_all = []
 test_loss = []
 train_accuracy = []
 test_accuracy = []
-mus = [obj['mu'] for i in range(obj['num_users'])]
+mus = [parameters['mu'] for i in range(parameters['num_users'])]
 
 num_classes = 10 # MNIST
 
@@ -167,24 +167,24 @@ class Federated(federated_pb2_grpc.FederatedServicer):
         epoch = 0
         
         np.random.seed(epoch) # Picking a fraction of users to choose for training
-        idxs_users = np.random.choice(range(obj['num_users']), max(int(obj['frac_clients']*obj['num_users']), 1), replace=False)
+        idxs_users = np.random.choice(range(parameters['num_users']), max(int(parameters['frac_clients']*parameters['num_users']), 1), replace=False)
         #Should change the below part later to accomodate sampling from selected users
-        if obj['is_attack'] == 1:
-            idxs_byz_users = np.random.choice(idxs_users, max(int(obj['frac_byz_clients']*len(idxs_users)), 1), replace=False)
+        if parameters['is_attack'] == 1:
+            idxs_byz_users = np.random.choice(idxs_users, max(int(parameters['frac_byz_clients']*len(idxs_users)), 1), replace=False)
         
         local_losses, local_sizes, control_updates = [], [], []
 
 
-        if obj['is_attack'] == 1 and obj['attack_type'] == 'label_flip' and idx in idxs_byz_users:
-            local_model = LocalUpdate(train_dataset, user_groups[idx], obj['device'], 
-                    obj['train_test_split'], obj['train_batch_size'], obj['test_batch_size'], obj['attack_type'], num_classes)
+        if parameters['is_attack'] == 1 and parameters['attack_type'] == 'label_flip' and idx in idxs_byz_users:
+            local_model = LocalUpdate(train_dataset, user_groups[idx], parameters['device'], 
+                    parameters['train_test_split'], parameters['train_batch_size'], parameters['test_batch_size'], parameters['attack_type'], num_classes)
         else:
-            local_model = LocalUpdate(train_dataset, user_groups[idx], obj['device'], 
-                    obj['train_test_split'], obj['train_batch_size'], obj['test_batch_size'])
+            local_model = LocalUpdate(train_dataset, user_groups[idx], parameters['device'], 
+                    parameters['train_test_split'], parameters['train_batch_size'], parameters['test_batch_size'])
 
-        w, c_update, c_new, loss, local_size = local_model.local_opt(obj['local_optimizer'], obj['local_lr'], 
-                                                obj['local_epochs'], global_model, obj['momentum'], mus[idx], c[idx], c[-1], 
-                                                epoch+1, idx+1, obj['batch_print_frequency'])
+        w, c_update, c_new, loss, local_size = local_model.local_opt(parameters['local_optimizer'], parameters['local_lr'], 
+                                                parameters['local_epochs'], global_model, parameters['momentum'], mus[idx], c[idx], c[-1], 
+                                                epoch+1, idx+1, parameters['batch_print_frequency'])
 
         c[idx] = c_new
         

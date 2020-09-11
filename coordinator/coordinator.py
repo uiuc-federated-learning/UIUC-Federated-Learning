@@ -17,9 +17,9 @@ from torchvision import datasets, transforms
 from src.sampling import iid, non_iid
 from src.models import LR, MLP, CNNMnist
 from src.utils import global_aggregate, network_parameters, test_inference
-from src.local_train import LocalUpdate
 from src.attacks import attack_updates
 from src.defense import defend_updates
+from src.ModelAggregator import ModelAggregator
 
 from collections import OrderedDict, Counter
 
@@ -75,100 +75,27 @@ parser.add_argument('--global_print_frequency', type=int, default=1, help="frequ
 parser.add_argument('--global_store_frequency', type=int, default=100, help="frequency after which global results should be written to CSV")
 parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
 
-obj = parser.parse_args()
+parameters = parser.parse_args()
 
 with open('config.json') as f:
 	json_vars = json.load(f)
 
-obj = vars(obj)
-obj.update(json_vars)
-print(obj)
+parameters = vars(parameters)
+parameters.update(json_vars)
 
-np.random.seed(obj['seed'])
-torch.manual_seed(obj['seed'])
-############################### Loading Dataset ###############################
-if obj['data_source'] == 'MNIST':
-	data_dir = 'data/'
-	transformation = transforms.Compose([
-		transforms.ToTensor(), 
-		transforms.Normalize((0.1307,), (0.3081,))
-	])
-	train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transformation)
-	test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transformation)
-	print("Train and Test Sizes for %s - (%d, %d)"%(obj['data_source'], len(train_dataset), len(test_dataset)))
-    
-################################ Sampling Data ################################
-if obj['sampling'] == 'iid':
-	user_groups = iid(train_dataset, obj['num_users'], obj['seed'])
-else:
-	user_groups = non_iid(train_dataset, obj['num_users'], obj['num_shards_user'], obj['seed'])
-
-################################ Defining Model ################################
-if obj['model'] == 'LR':
-	global_model = LR(dim_in=28*28, dim_out=10, seed=obj['seed'])
-elif obj['model'] == 'MLP':
-	global_model = MLP(dim_in=28*28, dim_hidden=200, dim_out=10, seed=obj['seed'])
-elif obj['model'] == 'CNN' and obj['data_source'] == 'MNIST':
-	global_model = CNNMnist(obj['seed'])
-else:
-	raise ValueError('Check the model and data source provided in the arguments.')
-
-print("Number of parameters in %s - %d."%(obj['model'], network_parameters(global_model)))
-
-global_model.to(obj['device'])
-
-global_weights = global_model.state_dict() # Setting the initial global weights
-alpha=obj['global_momentum_param']
-
-local_weights = []
-local_sizes = []
-
-############################ Initializing Placeholder ############################
-
-# Momentum parameter 'v' for FedAvgM & `m` for FedAdam & FedYogi
-# Control variates for SCAFFOLD (Last one corresponds to the server variate)
-v = OrderedDict()
-m = OrderedDict()
-c = [OrderedDict() for i in range(len(user_groups) + 1)]
-
-for k in global_weights.keys():
-	v[k] = torch.zeros(global_weights[k].shape, dtype=global_weights[k].dtype)
-	m[k] = torch.zeros(global_weights[k].shape, dtype=global_weights[k].dtype)
-	for idx, i in enumerate(c):
-		c[idx][k] = torch.zeros(global_weights[k].shape, dtype=global_weights[k].dtype)
-
-def aggregate(global_weights, local_weights, local_sizes, alpha, obj, v, m):
-    gw = copy.deepcopy(global_weights)
-    epoch = 0
-
-    global_model.load_state_dict(gw) # [i for idx, i in enumerate(local_updates) if idx in idxs_to_use]
-
-
-    global_weights, v, m = global_aggregate(obj['global_optimizer'], global_weights, local_weights, 
-                                        local_sizes, alpha, obj['global_lr'], obj['beta1'], obj['beta2'],
-                                        v, m, obj['eps'], epoch+1)
-    global_model.load_state_dict(global_weights)
-
-    local_weights = []
-    local_sizes = []
-    
-    print("Aggregated Model")
-    return global_model
-
+aggregator = ModelAggregator(parameters)
 
 def run():
     # thread these functions
     send_model('1234')
-    #send_model('1235')
-    #send_model('1236')
-    global_model = aggregate(global_weights, local_weights, local_sizes, alpha, obj, v, m)
+    
+    aggregator.aggregate()
 
 def send_model(port):
     channel = grpc.insecure_channel('localhost:' + port)
     stub = federated_pb2_grpc.FederatedStub(channel)
-    response = stub.GetUpdatedModel(federated_pb2.UpdatedModelRequest(global_model=pickle.dumps(global_model)))
-    local_weights.append(pickle.loads(response.weights))
-    local_sizes.append(response.local_size)
+    hospital_model = stub.GetUpdatedModel(federated_pb2.UpdatedModelRequest(global_model=pickle.dumps(aggregator.global_model)))
+    aggregator.add_hospital_data(pickle.loads(hospital_model.weights), hospital_model.local_size)
     print("Received a set of weights")
     channel.close()
 
