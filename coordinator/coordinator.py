@@ -87,9 +87,11 @@ aggregator = ModelAggregator(parameters)
 
 def run():
     # thread these functions
-    send_model('1234')
+    for _ in range(parameters['global_epochs']):
+        send_model('1234')
     
-    aggregator.aggregate()
+        aggregator.aggregate()
+        print("Aggregated weights")
 
 def send_model(port):
     channel = grpc.insecure_channel('localhost:' + port)
