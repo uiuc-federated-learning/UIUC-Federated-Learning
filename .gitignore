@@ -1,2 +1,3 @@
 hospital/data
 coordinator/data
+*.pyc

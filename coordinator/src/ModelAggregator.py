@@ -60,9 +60,7 @@ class ModelAggregator():
     def aggregate(self):
         gw = copy.deepcopy(self.global_weights)
         
-
         self.global_model.load_state_dict(gw)
-
 
         self.global_weights = global_aggregate(self.parameters['global_optimizer'], self.global_weights, self.local_weights, self.local_sizes,
                                             self.parameters['global_momentum_param'], self.parameters['global_lr'], self.parameters['beta1'], self.parameters['beta2'],
