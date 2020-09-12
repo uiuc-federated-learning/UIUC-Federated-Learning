@@ -101,9 +101,9 @@ num_classes = 10 # MNIST
 
 idx = 0
 
-class Federated(federated_pb2_grpc.FederatedServicer):
+class Hospital(federated_pb2_grpc.HospitalServicer):
 
-    def GetUpdatedModel(self, request, context):
+    def ComputeUpdatedModel(self, request, context):
         print("Sending model")
         ################################# Client Sampling & Local Training #################################
         global_model = pickle.loads(request.global_model)
@@ -161,7 +161,7 @@ def accuracy(global_model, epoch):
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    federated_pb2_grpc.add_FederatedServicer_to_server(Federated(), server)
+    federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
     server.add_insecure_port('[::]:1234')
     server.start()
     server.wait_for_termination()

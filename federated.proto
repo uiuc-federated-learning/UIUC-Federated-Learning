@@ -14,12 +14,12 @@
 
 syntax = "proto3";
 
-package federated;
+package hospital;
 
 // The greeting service definition.
-service Federated {
+service Hospital {
   // Sends a greeting
-  rpc GetUpdatedModel (UpdatedModelRequest) returns (ModelWeights) {}
+  rpc ComputeUpdatedModel (UpdatedModelRequest) returns (ModelWeights) {}
 }
 
 // The request message containing the user's name.

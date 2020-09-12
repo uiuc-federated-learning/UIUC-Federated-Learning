@@ -5,7 +5,7 @@ import grpc
 import federated_pb2 as federated__pb2
 
 
-class FederatedStub(object):
+class HospitalStub(object):
     """The greeting service definition.
     """
 
@@ -15,18 +15,18 @@ class FederatedStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetUpdatedModel = channel.unary_unary(
-                '/federated.Federated/GetUpdatedModel',
+        self.ComputeUpdatedModel = channel.unary_unary(
+                '/hospital.Hospital/ComputeUpdatedModel',
                 request_serializer=federated__pb2.UpdatedModelRequest.SerializeToString,
                 response_deserializer=federated__pb2.ModelWeights.FromString,
                 )
 
 
-class FederatedServicer(object):
+class HospitalServicer(object):
     """The greeting service definition.
     """
 
-    def GetUpdatedModel(self, request, context):
+    def ComputeUpdatedModel(self, request, context):
         """Sends a greeting
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -34,26 +34,26 @@ class FederatedServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_FederatedServicer_to_server(servicer, server):
+def add_HospitalServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetUpdatedModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetUpdatedModel,
+            'ComputeUpdatedModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.ComputeUpdatedModel,
                     request_deserializer=federated__pb2.UpdatedModelRequest.FromString,
                     response_serializer=federated__pb2.ModelWeights.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'federated.Federated', rpc_method_handlers)
+            'hospital.Hospital', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class Federated(object):
+class Hospital(object):
     """The greeting service definition.
     """
 
     @staticmethod
-    def GetUpdatedModel(request,
+    def ComputeUpdatedModel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -63,7 +63,7 @@ class Federated(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/federated.Federated/GetUpdatedModel',
+        return grpc.experimental.unary_unary(request, target, '/hospital.Hospital/ComputeUpdatedModel',
             federated__pb2.UpdatedModelRequest.SerializeToString,
             federated__pb2.ModelWeights.FromString,
             options, channel_credentials,

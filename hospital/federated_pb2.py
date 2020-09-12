@@ -15,11 +15,11 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='federated.proto',
-  package='federated',
+  package='hospital',
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"+\n\x13UpdatedModelRequest\x12\x14\n\x0cglobal_model\x18\x01 \x01(\x0c\"3\n\x0cModelWeights\x12\x0f\n\x07weights\x18\x01 \x01(\x0c\x12\x12\n\nlocal_size\x18\x02 \x01(\x05\x32Y\n\tFederated\x12L\n\x0fGetUpdatedModel\x12\x1e.federated.UpdatedModelRequest\x1a\x17.federated.ModelWeights\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\x08hospital\"+\n\x13UpdatedModelRequest\x12\x14\n\x0cglobal_model\x18\x01 \x01(\x0c\"3\n\x0cModelWeights\x12\x0f\n\x07weights\x18\x01 \x01(\x0c\x12\x12\n\nlocal_size\x18\x02 \x01(\x05\x32Z\n\x08Hospital\x12N\n\x13\x43omputeUpdatedModel\x12\x1d.hospital.UpdatedModelRequest\x1a\x16.hospital.ModelWeights\"\x00\x62\x06proto3'
 )
 
 
@@ -27,14 +27,14 @@ DESCRIPTOR = _descriptor.FileDescriptor(
 
 _UPDATEDMODELREQUEST = _descriptor.Descriptor(
   name='UpdatedModelRequest',
-  full_name='federated.UpdatedModelRequest',
+  full_name='hospital.UpdatedModelRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='global_model', full_name='federated.UpdatedModelRequest.global_model', index=0,
+      name='global_model', full_name='hospital.UpdatedModelRequest.global_model', index=0,
       number=1, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
@@ -52,28 +52,28 @@ _UPDATEDMODELREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=30,
-  serialized_end=73,
+  serialized_start=29,
+  serialized_end=72,
 )
 
 
 _MODELWEIGHTS = _descriptor.Descriptor(
   name='ModelWeights',
-  full_name='federated.ModelWeights',
+  full_name='hospital.ModelWeights',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='weights', full_name='federated.ModelWeights.weights', index=0,
+      name='weights', full_name='hospital.ModelWeights.weights', index=0,
       number=1, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='local_size', full_name='federated.ModelWeights.local_size', index=1,
+      name='local_size', full_name='hospital.ModelWeights.local_size', index=1,
       number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -91,8 +91,8 @@ _MODELWEIGHTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=75,
-  serialized_end=126,
+  serialized_start=74,
+  serialized_end=125,
 )
 
 DESCRIPTOR.message_types_by_name['UpdatedModelRequest'] = _UPDATEDMODELREQUEST
@@ -102,32 +102,32 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 UpdatedModelRequest = _reflection.GeneratedProtocolMessageType('UpdatedModelRequest', (_message.Message,), {
   'DESCRIPTOR' : _UPDATEDMODELREQUEST,
   '__module__' : 'federated_pb2'
-  # @@protoc_insertion_point(class_scope:federated.UpdatedModelRequest)
+  # @@protoc_insertion_point(class_scope:hospital.UpdatedModelRequest)
   })
 _sym_db.RegisterMessage(UpdatedModelRequest)
 
 ModelWeights = _reflection.GeneratedProtocolMessageType('ModelWeights', (_message.Message,), {
   'DESCRIPTOR' : _MODELWEIGHTS,
   '__module__' : 'federated_pb2'
-  # @@protoc_insertion_point(class_scope:federated.ModelWeights)
+  # @@protoc_insertion_point(class_scope:hospital.ModelWeights)
   })
 _sym_db.RegisterMessage(ModelWeights)
 
 
 
-_FEDERATED = _descriptor.ServiceDescriptor(
-  name='Federated',
-  full_name='federated.Federated',
+_HOSPITAL = _descriptor.ServiceDescriptor(
+  name='Hospital',
+  full_name='hospital.Hospital',
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=128,
+  serialized_start=127,
   serialized_end=217,
   methods=[
   _descriptor.MethodDescriptor(
-    name='GetUpdatedModel',
-    full_name='federated.Federated.GetUpdatedModel',
+    name='ComputeUpdatedModel',
+    full_name='hospital.Hospital.ComputeUpdatedModel',
     index=0,
     containing_service=None,
     input_type=_UPDATEDMODELREQUEST,
@@ -136,8 +136,8 @@ _FEDERATED = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
 ])
-_sym_db.RegisterServiceDescriptor(_FEDERATED)
+_sym_db.RegisterServiceDescriptor(_HOSPITAL)
 
-DESCRIPTOR.services_by_name['Federated'] = _FEDERATED
+DESCRIPTOR.services_by_name['Hospital'] = _HOSPITAL
 
 # @@protoc_insertion_point(module_scope)
