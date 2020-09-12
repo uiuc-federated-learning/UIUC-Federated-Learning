@@ -5,8 +5,6 @@ from torchvision import datasets, transforms
 
 from .models import LR, MLP, CNNMnist
 from .utils import global_aggregate, network_parameters, test_inference
-from .attacks import attack_updates
-from .defense import defend_updates
 
 import copy
 

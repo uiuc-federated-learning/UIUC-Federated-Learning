@@ -15,8 +15,6 @@ from torchvision import datasets, transforms
 from src.sampling import iid, non_iid
 from src.models import LR, MLP, CNNMnist
 from src.utils import global_aggregate, network_parameters, test_inference
-from src.attacks import attack_updates
-from src.defense import defend_updates
 from src.ModelAggregator import ModelAggregator
 from src.Parser import Parser
 
