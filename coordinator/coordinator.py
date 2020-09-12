@@ -6,35 +6,18 @@ import grpc
 import federated_pb2
 import federated_pb2_grpc
 
-import numpy as np
-import copy
-
-import torch
-from torchvision import datasets, transforms
-
-from src.models import LR, MLP, CNNMnist
-from src.utils import global_aggregate, network_parameters, test_inference
 from src.ModelAggregator import ModelAggregator
 from src.Parser import Parser
 
-from collections import OrderedDict, Counter
-
-from random import randint
+import pickle
 
 import warnings
-import os
-import pickle
-warnings.filterwarnings("ignore")
-
-parser = Parser()
-parameters = parser.parse_arguments()
-
-aggregator = ModelAggregator(parameters)
 
 def run():
-    # thread these functions
+    # TODO: thread these functions
     for _ in range(parameters['global_epochs']):
-        send_model('1234')
+        send_model('8001')
+        send_model('8002')
     
         aggregator.aggregate()
         print("Aggregated weights")
@@ -47,5 +30,13 @@ def send_model(port):
     print("Received a set of weights")
     channel.close()
 
-logging.basicConfig()
-run()
+if __name__ == "__main__":
+    # This prevents the "pickle support for Storage will be removed in 1.5. Use `torch.save` instead" from being printed to stdout. 
+    warnings.filterwarnings("ignore") 
+
+    parser = Parser()
+    parameters = parser.parse_arguments()
+
+    aggregator = ModelAggregator(parameters)
+    logging.basicConfig()
+    run()

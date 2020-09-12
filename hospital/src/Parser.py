@@ -50,6 +50,8 @@ class Parser:
         parser.add_argument('--global_store_frequency', type=int, default=100, help="frequency after which global results should be written to CSV")
         parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
 
+        parser.add_argument('--port', type=int, required=True, default = None, help="port to run the gRPC server on")
+
         self.parameters = parser.parse_args()
 
         with open('config.json') as f:

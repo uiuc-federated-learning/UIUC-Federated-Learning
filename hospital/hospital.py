@@ -162,7 +162,8 @@ def accuracy(global_model, epoch):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
-    server.add_insecure_port('[::]:1234')
+    port = parameters['port']
+    server.add_insecure_port('[::]:' + str(port))
     server.start()
     server.wait_for_termination()
 
