@@ -54,7 +54,7 @@ class Parser:
 
         self.parameters = parser.parse_args()
 
-        with open('config.json') as f:
+        with open('model_parameters.json') as f:
             json_vars = json.load(f)
 
         self.parameters = vars(self.parameters)

@@ -32,7 +32,6 @@ warnings.filterwarnings("ignore")
 
 parser = Parser()
 parameters = parser.parse_arguments()
-print(parameters)
 
 np.random.seed(parameters['seed'])
 torch.manual_seed(parameters['seed'])
