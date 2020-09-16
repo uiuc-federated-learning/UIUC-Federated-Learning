@@ -6,8 +6,8 @@ import grpc
 import federated_pb2
 import federated_pb2_grpc
 
-from src.ModelAggregator import ModelAggregator
-from src.Parser import Parser
+from src.model_aggregator import ModelAggregator
+from src.parser import Parser
 
 import pickle
 
