@@ -1,6 +1,6 @@
 PROTO = federated.proto
-COORGEN = coordinator/generated
-HOSPGEN = hospital/generated
+COORGEN = coordinator
+HOSPGEN = hospital
 
 .PHONY: proto
 
