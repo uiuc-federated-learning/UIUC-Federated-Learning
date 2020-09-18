@@ -1,16 +1,16 @@
-### Build
+### Run the coordinator
 
 ```
-$ docker-compose build
+python coordinator/coordinator.py
 ```
 
-### Launch
+### Run a hospital instance
 
 ```
-$ docker-compose up
+python hospital/hospital.py --port=<PORT_NUMBER>
 ```
 
-### Rebuild .proto files using this command 
+### Rebuild generated files using this command 
 (if any changes were made to federated.proto)
 ```
 make proto
