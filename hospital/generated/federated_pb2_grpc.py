@@ -5,7 +5,8 @@ import federated_pb2 as federated__pb2
 
 
 class HospitalStub(object):
-    """The greeting service definition.
+    """Hospital represents a client in our federated learning network. The clients
+    are represented as gRPC servers that expose RPC methods.
     """
 
     def __init__(self, channel):
@@ -16,18 +17,18 @@ class HospitalStub(object):
         """
         self.ComputeUpdatedModel = channel.unary_unary(
                 '/hospital.Hospital/ComputeUpdatedModel',
-                request_serializer=federated__pb2.UpdatedModelRequest.SerializeToString,
-                response_deserializer=federated__pb2.ModelWeights.FromString,
+                request_serializer=federated__pb2.Model.SerializeToString,
+                response_deserializer=federated__pb2.TrainedModel.FromString,
                 )
 
 
 class HospitalServicer(object):
-    """The greeting service definition.
+    """Hospital represents a client in our federated learning network. The clients
+    are represented as gRPC servers that expose RPC methods.
     """
 
     def ComputeUpdatedModel(self, request, context):
-        """Sends a greeting
-        """
+        """Missing associated documentation comment in .proto file"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -37,8 +38,8 @@ def add_HospitalServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ComputeUpdatedModel': grpc.unary_unary_rpc_method_handler(
                     servicer.ComputeUpdatedModel,
-                    request_deserializer=federated__pb2.UpdatedModelRequest.FromString,
-                    response_serializer=federated__pb2.ModelWeights.SerializeToString,
+                    request_deserializer=federated__pb2.Model.FromString,
+                    response_serializer=federated__pb2.TrainedModel.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -48,7 +49,8 @@ def add_HospitalServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Hospital(object):
-    """The greeting service definition.
+    """Hospital represents a client in our federated learning network. The clients
+    are represented as gRPC servers that expose RPC methods.
     """
 
     @staticmethod
@@ -62,7 +64,7 @@ class Hospital(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/hospital.Hospital/ComputeUpdatedModel',
-            federated__pb2.UpdatedModelRequest.SerializeToString,
-            federated__pb2.ModelWeights.FromString,
+            federated__pb2.Model.SerializeToString,
+            federated__pb2.TrainedModel.FromString,
             options, channel_credentials,
             call_credentials, compression, wait_for_ready, timeout, metadata)

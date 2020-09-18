@@ -18,21 +18,21 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='hospital',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\x08hospital\"+\n\x13UpdatedModelRequest\x12\x14\n\x0cglobal_model\x18\x01 \x01(\x0c\"3\n\x0cModelWeights\x12\x0f\n\x07weights\x18\x01 \x01(\x0c\x12\x12\n\nlocal_size\x18\x02 \x01(\x05\x32Z\n\x08Hospital\x12N\n\x13\x43omputeUpdatedModel\x12\x1d.hospital.UpdatedModelRequest\x1a\x16.hospital.ModelWeights\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\x08hospital\"\x18\n\x05Model\x12\x0f\n\x07weights\x18\x01 \x01(\x0c\"H\n\x0cTrainedModel\x12\x1e\n\x05model\x18\x01 \x01(\x0b\x32\x0f.hospital.Model\x12\x18\n\x10training_samples\x18\x02 \x01(\x05\x32L\n\x08Hospital\x12@\n\x13\x43omputeUpdatedModel\x12\x0f.hospital.Model\x1a\x16.hospital.TrainedModel\"\x00\x62\x06proto3'
 )
 
 
 
 
-_UPDATEDMODELREQUEST = _descriptor.Descriptor(
-  name='UpdatedModelRequest',
-  full_name='hospital.UpdatedModelRequest',
+_MODEL = _descriptor.Descriptor(
+  name='Model',
+  full_name='hospital.Model',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='global_model', full_name='hospital.UpdatedModelRequest.global_model', index=0,
+      name='weights', full_name='hospital.Model.weights', index=0,
       number=1, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
@@ -51,26 +51,26 @@ _UPDATEDMODELREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=29,
-  serialized_end=72,
+  serialized_end=53,
 )
 
 
-_MODELWEIGHTS = _descriptor.Descriptor(
-  name='ModelWeights',
-  full_name='hospital.ModelWeights',
+_TRAINEDMODEL = _descriptor.Descriptor(
+  name='TrainedModel',
+  full_name='hospital.TrainedModel',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='weights', full_name='hospital.ModelWeights.weights', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
+      name='model', full_name='hospital.TrainedModel.model', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='local_size', full_name='hospital.ModelWeights.local_size', index=1,
+      name='training_samples', full_name='hospital.TrainedModel.training_samples', index=1,
       number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -88,27 +88,28 @@ _MODELWEIGHTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=74,
-  serialized_end=125,
+  serialized_start=55,
+  serialized_end=127,
 )
 
-DESCRIPTOR.message_types_by_name['UpdatedModelRequest'] = _UPDATEDMODELREQUEST
-DESCRIPTOR.message_types_by_name['ModelWeights'] = _MODELWEIGHTS
+_TRAINEDMODEL.fields_by_name['model'].message_type = _MODEL
+DESCRIPTOR.message_types_by_name['Model'] = _MODEL
+DESCRIPTOR.message_types_by_name['TrainedModel'] = _TRAINEDMODEL
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-UpdatedModelRequest = _reflection.GeneratedProtocolMessageType('UpdatedModelRequest', (_message.Message,), {
-  'DESCRIPTOR' : _UPDATEDMODELREQUEST,
+Model = _reflection.GeneratedProtocolMessageType('Model', (_message.Message,), {
+  'DESCRIPTOR' : _MODEL,
   '__module__' : 'federated_pb2'
-  # @@protoc_insertion_point(class_scope:hospital.UpdatedModelRequest)
+  # @@protoc_insertion_point(class_scope:hospital.Model)
   })
-_sym_db.RegisterMessage(UpdatedModelRequest)
+_sym_db.RegisterMessage(Model)
 
-ModelWeights = _reflection.GeneratedProtocolMessageType('ModelWeights', (_message.Message,), {
-  'DESCRIPTOR' : _MODELWEIGHTS,
+TrainedModel = _reflection.GeneratedProtocolMessageType('TrainedModel', (_message.Message,), {
+  'DESCRIPTOR' : _TRAINEDMODEL,
   '__module__' : 'federated_pb2'
-  # @@protoc_insertion_point(class_scope:hospital.ModelWeights)
+  # @@protoc_insertion_point(class_scope:hospital.TrainedModel)
   })
-_sym_db.RegisterMessage(ModelWeights)
+_sym_db.RegisterMessage(TrainedModel)
 
 
 
@@ -118,16 +119,16 @@ _HOSPITAL = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=127,
-  serialized_end=217,
+  serialized_start=129,
+  serialized_end=205,
   methods=[
   _descriptor.MethodDescriptor(
     name='ComputeUpdatedModel',
     full_name='hospital.Hospital.ComputeUpdatedModel',
     index=0,
     containing_service=None,
-    input_type=_UPDATEDMODELREQUEST,
-    output_type=_MODELWEIGHTS,
+    input_type=_MODEL,
+    output_type=_TRAINEDMODEL,
     serialized_options=None,
   ),
 ])
