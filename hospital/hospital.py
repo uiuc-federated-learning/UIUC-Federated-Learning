@@ -102,10 +102,10 @@ idx = 0
 
 class Hospital(federated_pb2_grpc.HospitalServicer):
 
-    def ComputeUpdatedModel(self, request, context):
+    def ComputeUpdatedModel(self, global_model, context):
         print("Sending model")
         ################################# Client Sampling & Local Training #################################
-        global_model = pickle.loads(request.global_model)
+        global_model = pickle.loads(global_model.weights)
         global_model.train()
         
         epoch = 0
@@ -141,7 +141,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
         train_loss_updated.append(sum(local_losses)/len(local_losses)) # Appending global training loss
         accuracy(global_model, epoch)
-        return federated_pb2.ModelWeights(weights=pickle.dumps(w), local_size=local_size)
+        return federated_pb2.TrainedModel(model=federated_pb2.Model(weights=pickle.dumps(w)), training_samples=local_size) 
 
 def accuracy(global_model, epoch):
     test_acc, test_loss_value = test_inference(global_model, test_dataset, parameters['device'], parameters['test_batch_size'])
