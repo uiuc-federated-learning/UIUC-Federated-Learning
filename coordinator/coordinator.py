@@ -1,17 +1,13 @@
-from __future__ import print_function
 import logging
-
+import pickle
+import warnings
 import grpc
-
-import federated_pb2
-import federated_pb2_grpc
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
+import federated_pb2
+import federated_pb2_grpc
 
-import pickle
-
-import warnings
 
 def iterate_global_model(aggregator, remote_addresses, ports):
     remote_addresses = ["localhost"]*len(ports) if remote_addresses == [] else remote_addresses
@@ -24,7 +20,7 @@ def iterate_global_model(aggregator, remote_addresses, ports):
             train_hospital_model(address)
     
         aggregator.aggregate()
-        print("Completed epoch {epoch}. Aggregated all model weights.")
+        print("Completed epoch %d. Aggregated all model weights." % (epoch))
     
     print('Completed all epochs.')
 
@@ -34,7 +30,7 @@ def train_hospital_model(hospital_address):
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(weights=pickle.dumps(aggregator.global_model)))
 
     aggregator.add_hospital_data(pickle.loads(hospital_model.model.weights), hospital_model.training_samples)
-    print("Received a set of weights")
+    print("Received a set of weights from address: " + hospital_address)
 
     channel.close()
 

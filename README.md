@@ -1,7 +1,7 @@
-### Run the coordinator
+### Run the coordinator locally
 
 ```
-python coordinator/coordinator.py
+python coordinator/coordinator.py --ports 8001 8002
 ```
 
 ### Run a hospital instance
