@@ -10,14 +10,12 @@ import federated_pb2_grpc
 
 
 def iterate_global_model(aggregator, remote_addresses, ports):
-    remote_addresses = ["localhost"]*len(ports) if remote_addresses == [] else remote_addresses
-    assert len(remote_addresses) == len(ports)
+    remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
 
     # TODO: thread these functions
     for epoch in range(parameters['global_epochs']):
         for i in range(len(remote_addresses)):
-            address = remote_addresses[i] + ':' + ports[i]
-            train_hospital_model(address)
+            train_hospital_model(remote_addresses[i])
     
         aggregator.aggregate()
         print("Completed epoch %d. Aggregated all model weights." % (epoch))
