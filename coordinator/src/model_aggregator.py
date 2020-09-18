@@ -1,7 +1,7 @@
 import numpy as np
 
 import torch
-from torchvision import datasets, transforms
+# from torchvision import datasets, transforms
 
 from .models import LR, MLP, CNNMnist
 from .utils import global_aggregate, network_parameters, test_inference
