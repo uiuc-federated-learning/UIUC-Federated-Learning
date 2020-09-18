@@ -16,7 +16,7 @@ from src.sampling import iid, non_iid
 from src.models import LR, MLP, CNNMnist
 from src.utils import global_aggregate, network_parameters, test_inference
 from src.local_train import LocalUpdate
-from src.parser import Parser
+from src.flag_parser import Parser
 
 from collections import OrderedDict, Counter
 
