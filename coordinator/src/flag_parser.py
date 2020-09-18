@@ -50,6 +50,9 @@ class Parser:
         parser.add_argument('--global_store_frequency', type=int, default=100, help="frequency after which global results should be written to CSV")
         parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
 
+        parser.add_argument('--ports', nargs='*', required=True, help="Usage: --ports 8001 8002 8003 ... The ports the hospital gRPC servers are running on")
+        parser.add_argument('--remote_addresses', nargs='*', default=[], help="")
+
         self.parameters = parser.parse_args()
 
         with open('model_parameters.json') as f:
