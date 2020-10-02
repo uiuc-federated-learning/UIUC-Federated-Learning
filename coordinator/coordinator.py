@@ -2,6 +2,7 @@ import logging
 import pickle
 import warnings
 import grpc
+import threading
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
@@ -12,17 +13,22 @@ import federated_pb2_grpc
 def iterate_global_model(aggregator, remote_addresses, ports):
     remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
 
-    # TODO: thread these functions
     for epoch in range(parameters['global_epochs']):
+        thread_list = []
         for i in range(len(remote_addresses)):
-            train_hospital_model(remote_addresses[i])
+            thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], aggregator))
+            thread_list.append(thread)
+        for thread in thread_list:
+            thread.start()
+        for thread in thread_list:
+            thread.join()
     
         aggregator.aggregate()
         print("Completed epoch %d. Aggregated all model weights." % (epoch))
     
     print('Completed all epochs.')
 
-def train_hospital_model(hospital_address):
+def train_hospital_model(hospital_address, aggregator):
     channel = grpc.insecure_channel(hospital_address)
     stub = federated_pb2_grpc.HospitalStub(channel)
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(weights=pickle.dumps(aggregator.global_model)))
