@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package hospital;
+
+// Hospital represents a client in our federated learning network. The clients
+// are represented as gRPC servers that expose RPC methods.
+service Hospital {
+  rpc ComputeUpdatedModel (Model) returns (TrainedModel) {}
+}
+
+message Model {
+  bytes weights = 1;
+}
+
+message TrainedModel {
+  Model model = 1;
+  int32 training_samples = 2;
+}

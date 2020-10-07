@@ -1,17 +1,17 @@
-### Build
+### Run the coordinator locally
 
 ```
-$ docker-compose build
+python coordinator/coordinator.py --ports 8001 8002
 ```
 
-### Launch
+### Run a hospital instance
 
 ```
-$ docker-compose up
+python hospital/hospital.py --port=<PORT_NUMBER>
 ```
 
-### Rebuild .proto files using this command 
-(if any changes were made to helloworld.proto)
+### Rebuild generated files using this command 
+(if any changes were made to federated.proto)
 ```
-$ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. helloworld.proto
+make proto
 ```

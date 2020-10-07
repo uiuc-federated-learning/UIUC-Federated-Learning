@@ -3,20 +3,38 @@ import logging
 
 import grpc
 
-import helloworld_pb2
-import helloworld_pb2_grpc
+import federated_pb2
+import federated_pb2_grpc
 
-class Greeter(helloworld_pb2_grpc.GreeterServicer):
+import numpy as np
 
-    def SayHello(self, request, context):
-        return helloworld_pb2.HelloReply(message='Hello, %s!' % request.name)
+from src.flag_parser import Parser
+from src.model_trainer import ModelTraining
+
+import warnings
+warnings.filterwarnings("ignore")
+
+parser = Parser()
+parameters = parser.parse_arguments()
+
+class Hospital(federated_pb2_grpc.HospitalServicer):
+
+    def ComputeUpdatedModel(self, global_model, context):
+        model = local_model.ComputeUpdatedModel(global_model, context)
+        print("Sending model")
+        return model
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port('[::]:1234')
+    federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
+    port = parameters['port']
+    server.add_insecure_port('[::]:' + str(port))
     server.start()
+    print("Serving")
     server.wait_for_termination()
 
-logging.basicConfig()
-serve()
+if __name__ == "__main__":
+    local_model = ModelTraining(parameters)
+
+    logging.basicConfig()
+    serve()
