@@ -1,5 +1,5 @@
-# Same thing than the 'server' Dockerfile.
-FROM python:latest
+# Start from 3.7.4 since latest points to 3.9 which has issues with torch
+FROM python:3.7.4
 ADD requirements.txt .
 RUN pip3 install -r requirements.txt
 
@@ -12,3 +12,6 @@ ADD hospital.py /hospital/
 # This command changes the base directory of your image.
 # Here we define '/hospital/' as base directory.
 WORKDIR /hospital/
+
+# Now run the hospital on port 8000 on the machine.
+CMD ["python", "hospital.py", "--port", "8000"]
