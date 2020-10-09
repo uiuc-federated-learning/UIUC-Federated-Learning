@@ -8,6 +8,8 @@ RUN pip3 install -r requirements.txt
 ADD src /hospital/src
 ADD model_parameters.json /hospital/
 ADD hospital.py /hospital/
+ADD federated_pb2.py /hospital/
+ADD federated_pb2_grpc.py /hospital/
 
 # This command changes the base directory of your image.
 # Here we define '/hospital/' as base directory.
