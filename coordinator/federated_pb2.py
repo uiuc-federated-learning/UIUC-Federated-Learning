@@ -18,26 +18,21 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='hospital',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\x08hospital\"\x18\n\x05Model\x12\x0f\n\x07weights\x18\x01 \x01(\x0c\"H\n\x0cTrainedModel\x12\x1e\n\x05model\x18\x01 \x01(\x0b\x32\x0f.hospital.Model\x12\x18\n\x10training_samples\x18\x02 \x01(\x05\x32L\n\x08Hospital\x12@\n\x13\x43omputeUpdatedModel\x12\x0f.hospital.Model\x1a\x16.hospital.TrainedModel\"\x00\x62\x06proto3'
+  create_key=_descriptor._internal_create_key,
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\x08hospital\"\x13\n\x11\x46\x65tchSharedKeyReq\"!\n\x12\x46\x65tchSharedKeyResp\x12\x0b\n\x03key\x18\x01 \x01(\x0c\"F\n\rInitializeReq\x12\x19\n\x11selfsocketaddress\x18\x01 \x01(\t\x12\x1a\n\x12\x61llsocketaddresses\x18\x02 \x03(\t\"\x10\n\x0eInitializeResp\"\x18\n\x05Model\x12\x0f\n\x07weights\x18\x01 \x01(\x0c\"H\n\x0cTrainedModel\x12\x1e\n\x05model\x18\x01 \x01(\x0b\x32\x0f.hospital.Model\x12\x18\n\x10training_samples\x18\x02 \x01(\x05\x32\xdd\x01\n\x08Hospital\x12\x41\n\nInitialize\x12\x17.hospital.InitializeReq\x1a\x18.hospital.InitializeResp\"\x00\x12L\n\x0e\x46\x65tchSharedKey\x12\x1b.hospital.FetchSharedKeyReq\x1a\x1b.hospital.FetchSharedKeyReq\"\x00\x12@\n\x13\x43omputeUpdatedModel\x12\x0f.hospital.Model\x1a\x16.hospital.TrainedModel\"\x00\x62\x06proto3'
 )
 
 
 
 
-_MODEL = _descriptor.Descriptor(
-  name='Model',
-  full_name='hospital.Model',
+_FETCHSHAREDKEYREQ = _descriptor.Descriptor(
+  name='FetchSharedKeyReq',
+  full_name='hospital.FetchSharedKeyReq',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
+  create_key=_descriptor._internal_create_key,
   fields=[
-    _descriptor.FieldDescriptor(
-      name='weights', full_name='hospital.Model.weights', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -51,31 +46,25 @@ _MODEL = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=29,
-  serialized_end=53,
+  serialized_end=48,
 )
 
 
-_TRAINEDMODEL = _descriptor.Descriptor(
-  name='TrainedModel',
-  full_name='hospital.TrainedModel',
+_FETCHSHAREDKEYRESP = _descriptor.Descriptor(
+  name='FetchSharedKeyResp',
+  full_name='hospital.FetchSharedKeyResp',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
+  create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='model', full_name='hospital.TrainedModel.model', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='key', full_name='hospital.FetchSharedKeyResp.key', index=0,
+      number=1, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='training_samples', full_name='hospital.TrainedModel.training_samples', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -88,14 +77,181 @@ _TRAINEDMODEL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=55,
-  serialized_end=127,
+  serialized_start=50,
+  serialized_end=83,
+)
+
+
+_INITIALIZEREQ = _descriptor.Descriptor(
+  name='InitializeReq',
+  full_name='hospital.InitializeReq',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='selfsocketaddress', full_name='hospital.InitializeReq.selfsocketaddress', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='allsocketaddresses', full_name='hospital.InitializeReq.allsocketaddresses', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=85,
+  serialized_end=155,
+)
+
+
+_INITIALIZERESP = _descriptor.Descriptor(
+  name='InitializeResp',
+  full_name='hospital.InitializeResp',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=157,
+  serialized_end=173,
+)
+
+
+_MODEL = _descriptor.Descriptor(
+  name='Model',
+  full_name='hospital.Model',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='weights', full_name='hospital.Model.weights', index=0,
+      number=1, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=175,
+  serialized_end=199,
+)
+
+
+_TRAINEDMODEL = _descriptor.Descriptor(
+  name='TrainedModel',
+  full_name='hospital.TrainedModel',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='model', full_name='hospital.TrainedModel.model', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='training_samples', full_name='hospital.TrainedModel.training_samples', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=201,
+  serialized_end=273,
 )
 
 _TRAINEDMODEL.fields_by_name['model'].message_type = _MODEL
+DESCRIPTOR.message_types_by_name['FetchSharedKeyReq'] = _FETCHSHAREDKEYREQ
+DESCRIPTOR.message_types_by_name['FetchSharedKeyResp'] = _FETCHSHAREDKEYRESP
+DESCRIPTOR.message_types_by_name['InitializeReq'] = _INITIALIZEREQ
+DESCRIPTOR.message_types_by_name['InitializeResp'] = _INITIALIZERESP
 DESCRIPTOR.message_types_by_name['Model'] = _MODEL
 DESCRIPTOR.message_types_by_name['TrainedModel'] = _TRAINEDMODEL
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+FetchSharedKeyReq = _reflection.GeneratedProtocolMessageType('FetchSharedKeyReq', (_message.Message,), {
+  'DESCRIPTOR' : _FETCHSHAREDKEYREQ,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:hospital.FetchSharedKeyReq)
+  })
+_sym_db.RegisterMessage(FetchSharedKeyReq)
+
+FetchSharedKeyResp = _reflection.GeneratedProtocolMessageType('FetchSharedKeyResp', (_message.Message,), {
+  'DESCRIPTOR' : _FETCHSHAREDKEYRESP,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:hospital.FetchSharedKeyResp)
+  })
+_sym_db.RegisterMessage(FetchSharedKeyResp)
+
+InitializeReq = _reflection.GeneratedProtocolMessageType('InitializeReq', (_message.Message,), {
+  'DESCRIPTOR' : _INITIALIZEREQ,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:hospital.InitializeReq)
+  })
+_sym_db.RegisterMessage(InitializeReq)
+
+InitializeResp = _reflection.GeneratedProtocolMessageType('InitializeResp', (_message.Message,), {
+  'DESCRIPTOR' : _INITIALIZERESP,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:hospital.InitializeResp)
+  })
+_sym_db.RegisterMessage(InitializeResp)
 
 Model = _reflection.GeneratedProtocolMessageType('Model', (_message.Message,), {
   'DESCRIPTOR' : _MODEL,
@@ -119,17 +275,39 @@ _HOSPITAL = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=129,
-  serialized_end=205,
+  create_key=_descriptor._internal_create_key,
+  serialized_start=276,
+  serialized_end=497,
   methods=[
+  _descriptor.MethodDescriptor(
+    name='Initialize',
+    full_name='hospital.Hospital.Initialize',
+    index=0,
+    containing_service=None,
+    input_type=_INITIALIZEREQ,
+    output_type=_INITIALIZERESP,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='FetchSharedKey',
+    full_name='hospital.Hospital.FetchSharedKey',
+    index=1,
+    containing_service=None,
+    input_type=_FETCHSHAREDKEYREQ,
+    output_type=_FETCHSHAREDKEYREQ,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
   _descriptor.MethodDescriptor(
     name='ComputeUpdatedModel',
     full_name='hospital.Hospital.ComputeUpdatedModel',
-    index=0,
+    index=2,
     containing_service=None,
     input_type=_MODEL,
     output_type=_TRAINEDMODEL,
     serialized_options=None,
+    create_key=_descriptor._internal_create_key,
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_HOSPITAL)

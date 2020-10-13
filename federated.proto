@@ -5,8 +5,23 @@ package hospital;
 // Hospital represents a client in our federated learning network. The clients
 // are represented as gRPC servers that expose RPC methods.
 service Hospital {
+  rpc Initialize(InitializeReq) returns (InitializeResp) {}
+  rpc FetchSharedKey(FetchSharedKeyReq) returns (FetchSharedKeyReq) {}
   rpc ComputeUpdatedModel (Model) returns (TrainedModel) {}
 }
+
+message FetchSharedKeyReq {}
+
+message FetchSharedKeyResp {
+  bytes key = 1;
+}
+
+message InitializeReq {
+  string selfsocketaddress = 1;
+  repeated string allsocketaddresses = 2;
+}
+
+message InitializeResp {}
 
 message Model {
   bytes weights = 1;
