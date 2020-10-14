@@ -6,14 +6,14 @@ package hospital;
 // are represented as gRPC servers that expose RPC methods.
 service Hospital {
   rpc Initialize(InitializeReq) returns (InitializeResp) {}
-  rpc FetchSharedKey(FetchSharedKeyReq) returns (FetchSharedKeyReq) {}
+  rpc FetchSharedKey(FetchSharedKeyReq) returns (FetchSharedKeyResp) {}
   rpc ComputeUpdatedModel (Model) returns (TrainedModel) {}
 }
 
 message FetchSharedKeyReq {}
 
 message FetchSharedKeyResp {
-  bytes key = 1;
+  string sharedkey = 1;
 }
 
 message InitializeReq {

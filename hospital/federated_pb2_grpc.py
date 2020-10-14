@@ -24,7 +24,7 @@ class HospitalStub(object):
         self.FetchSharedKey = channel.unary_unary(
                 '/hospital.Hospital/FetchSharedKey',
                 request_serializer=federated__pb2.FetchSharedKeyReq.SerializeToString,
-                response_deserializer=federated__pb2.FetchSharedKeyReq.FromString,
+                response_deserializer=federated__pb2.FetchSharedKeyResp.FromString,
                 )
         self.ComputeUpdatedModel = channel.unary_unary(
                 '/hospital.Hospital/ComputeUpdatedModel',
@@ -67,7 +67,7 @@ def add_HospitalServicer_to_server(servicer, server):
             'FetchSharedKey': grpc.unary_unary_rpc_method_handler(
                     servicer.FetchSharedKey,
                     request_deserializer=federated__pb2.FetchSharedKeyReq.FromString,
-                    response_serializer=federated__pb2.FetchSharedKeyReq.SerializeToString,
+                    response_serializer=federated__pb2.FetchSharedKeyResp.SerializeToString,
             ),
             'ComputeUpdatedModel': grpc.unary_unary_rpc_method_handler(
                     servicer.ComputeUpdatedModel,
@@ -116,7 +116,7 @@ class Hospital(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/hospital.Hospital/FetchSharedKey',
             federated__pb2.FetchSharedKeyReq.SerializeToString,
-            federated__pb2.FetchSharedKeyReq.FromString,
+            federated__pb2.FetchSharedKeyResp.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
