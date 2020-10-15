@@ -11,6 +11,7 @@ import federated_pb2_grpc
 from src.flag_parser import Parser
 from src.model_trainer import ModelTraining
 
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -30,16 +31,20 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
                 stub = federated_pb2_grpc.HospitalStub(channel)
                 shared_key_resp = stub.FetchSharedKey(federated_pb2.FetchSharedKeyReq())
                 shared_key = int(shared_key_resp.key)
+                self.positive_keys.append(shared_key)
+        
         
         return federated_pb2.InitializeResp()
         
     def FetchSharedKey(self, fetch_shared_key_req, context):
         shared_key = secrets.randbits(256)
+        self.negative_keys.append(shared_key)
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
-        model, train_samples = model_trainer.ComputeUpdatedModel(global_model.model_obj)
-        local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(model)), training_samples=train_samples)
+        local_model_obj, train_samples = model_trainer.ComputeUpdatedModel(global_model.model_obj)
+        print(local_model_obj)
+        local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         return local_model
 
 def serve():
