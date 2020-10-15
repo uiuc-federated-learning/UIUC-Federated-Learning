@@ -18,7 +18,8 @@ parameters = parser.parse_arguments()
 
 class Hospital(federated_pb2_grpc.HospitalServicer):
     def __init__(self):
-        self.shared_keys = []
+        self.positive_keys = []
+        self.negative_keys = []
 
     def Initialize(self, intialize_req, context):
         print('Initialize called')
@@ -26,20 +27,14 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
             if hospital_addr > intialize_req.selfsocketaddress:
                 channel = grpc.insecure_channel(hospital_addr)
                 stub = federated_pb2_grpc.HospitalStub(channel)
-                print('hospital_addr: ' + str(hospital_addr) + ' channel: ' + str(channel) + ' stub: ' + str(stub))
                 shared_key_resp = stub.FetchSharedKey(federated_pb2.FetchSharedKeyReq())
-                print('shared_key_resp')
-                print(shared_key_resp)
-                print(type(shared_key_resp))
-                # print(shared_key_resp.sharedkey)
-                # self.shared_keys.append(shared_key_resp.sharedkey)
+                shared_key = int(shared_key_resp.key)
         
         return federated_pb2.InitializeResp()
         
     def FetchSharedKey(self, fetch_shared_key_req, context):
-        print('FetchSharedKey called')
-        shared_key = secrets.randbits(63)
-        return federated_pb2.FetchSharedKeyResp(sharedkey=shared_key)
+        shared_key = secrets.randbits(256)
+        return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
         model = local_model.ComputeUpdatedModel(global_model, context)

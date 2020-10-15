@@ -13,7 +13,7 @@ service Hospital {
 message FetchSharedKeyReq {}
 
 message FetchSharedKeyResp {
-  string sharedkey = 1;
+  string key = 1; // Needs to be a string because ints only support 
 }
 
 message InitializeReq {
