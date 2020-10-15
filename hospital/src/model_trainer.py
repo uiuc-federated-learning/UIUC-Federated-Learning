@@ -1,11 +1,6 @@
 from concurrent import futures
 import logging
 
-import grpc
-
-import federated_pb2
-import federated_pb2_grpc
-
 import numpy as np
 import copy
 
@@ -89,9 +84,9 @@ class ModelTraining():
             else:
                 print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0, self.train_loss_updated[-1]))
     
-    def ComputeUpdatedModel(self, global_model, context):
+    def ComputeUpdatedModel(self, model_obj):
         ################################# Client Sampling & Local Training #################################
-        global_model = pickle.loads(global_model.weights)
+        global_model = pickle.loads(model_obj)
         global_model.train()
         
         self.setVars(global_model.state_dict())
@@ -123,4 +118,4 @@ class ModelTraining():
 
         self.train_loss_updated.append(sum(local_losses)/len(local_losses)) # Appending global training loss
         self.accuracy(global_model, self.epoch)
-        return federated_pb2.TrainedModel(model=federated_pb2.Model(weights=pickle.dumps(w)), training_samples=local_size)
+        return w , local_size

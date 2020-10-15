@@ -3,6 +3,7 @@ import logging
 import grpc
 import numpy as np
 import secrets
+import pickle
 
 import federated_pb2
 import federated_pb2_grpc
@@ -37,10 +38,9 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
-        model = local_model.ComputeUpdatedModel(global_model, context)
-        print("Sending model")
-        return model
-            
+        model, train_samples = model_trainer.ComputeUpdatedModel(global_model.model_obj)
+        local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(model)), training_samples=train_samples)
+        return local_model
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -52,7 +52,6 @@ def serve():
     server.wait_for_termination()
 
 if __name__ == "__main__":
-    local_model = ModelTraining(parameters)
-
+    model_trainer = ModelTraining(parameters)
     logging.basicConfig()
     serve()

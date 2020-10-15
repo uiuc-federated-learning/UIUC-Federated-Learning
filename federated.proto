@@ -24,7 +24,7 @@ message InitializeReq {
 message InitializeResp {}
 
 message Model {
-  bytes weights = 1;
+  bytes model_obj = 1;
 }
 
 message TrainedModel {

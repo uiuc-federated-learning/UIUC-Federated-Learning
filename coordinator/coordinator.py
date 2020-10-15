@@ -33,9 +33,9 @@ def train_hospital_model(hospital_address, aggregator, all_addresses):
     stub = federated_pb2_grpc.HospitalStub(channel)
     initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses)
     stub.Initialize(initReq)
-    hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(weights=pickle.dumps(aggregator.global_model)))
+    hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(aggregator.global_model)))
 
-    aggregator.add_hospital_data(pickle.loads(hospital_model.model.weights), hospital_model.training_samples)
+    aggregator.add_hospital_data(pickle.loads(hospital_model.model.model_obj), hospital_model.training_samples)
     print("Received a set of weights from address: " + hospital_address)
 
     channel.close()
