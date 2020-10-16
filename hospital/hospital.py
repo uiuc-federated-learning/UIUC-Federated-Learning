@@ -4,6 +4,7 @@ import grpc
 import numpy as np
 import secrets
 import pickle
+import torch
 
 import federated_pb2
 import federated_pb2_grpc
@@ -37,14 +38,28 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.InitializeResp()
         
     def FetchSharedKey(self, fetch_shared_key_req, context):
-        shared_key = secrets.randbits(256)
+        shared_key = secrets.randbits(32)
         self.negative_keys.append(shared_key)
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
         local_model_obj, train_samples = model_trainer.ComputeUpdatedModel(global_model.model_obj)
         print(local_model_obj)
+        
+        for key in self.positive_keys:
+            torch.manual_seed(key)
+            for key_modifying in local_model_obj.keys():
+                random_mask = torch.rand(local_model_obj[key_modifying].shape)
+                torch.add(local_model_obj[key_modifying], random_mask)
+            
+        for key in self.negative_keys:
+            torch.manual_seed(key)
+            for key_modifying in local_model_obj.keys():
+                random_mask = torch.rand(local_model_obj[key_modifying].shape)
+                torch.sub(local_model_obj[key_modifying], random_mask)
+
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
+        
         return local_model
 
 def serve():
