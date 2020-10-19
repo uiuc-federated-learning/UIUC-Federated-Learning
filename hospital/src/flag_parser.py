@@ -49,6 +49,7 @@ class Parser:
         parser.add_argument('--global_print_frequency', type=int, default=1, help="frequency after which global results need to be printed to the console")
         parser.add_argument('--global_store_frequency', type=int, default=100, help="frequency after which global results should be written to CSV")
         parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
+        parser.add_argument('--shift_amount', type=int, default=0, help="number of bits to shift when quantizing weights")
 
         parser.add_argument('--port', type=int, required=True, default = None, help="port to run the gRPC server on")
 

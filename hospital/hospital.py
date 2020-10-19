@@ -19,6 +19,25 @@ warnings.filterwarnings("ignore")
 parser = Parser()
 parameters = parser.parse_arguments()
 
+def shift_weights(state_dict, shift_amount):
+    power = (1<<shift_amount)
+
+    for key, value in state_dict.items():
+        print(value.shape, type(value.shape))
+        
+        if "bias" not in key:
+            new_tensor = torch.zeros(value.shape, dtype=torch.int64)
+            for row in range(value.shape[0]):
+                for col in range(value.shape[1]):
+                    new_tensor[row][col] = state_dict[key][row][col]*power
+        else:
+            new_tensor = torch.zeros(value.shape, dtype=torch.int64)
+            for b in range(len(value)):
+                new_tensor[b] = state_dict[key][b]*power
+        state_dict[key] = new_tensor
+
+
+
 class Hospital(federated_pb2_grpc.HospitalServicer):
     def __init__(self):
         self.positive_keys = []
@@ -44,7 +63,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
     def ComputeUpdatedModel(self, global_model, context):
         local_model_obj, train_samples = model_trainer.ComputeUpdatedModel(global_model.model_obj)
-        print(local_model_obj)
+        # print(local_model_obj)
         
         for key in self.positive_keys:
             torch.manual_seed(key)
@@ -57,6 +76,9 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
             for key_modifying in local_model_obj.keys():
                 random_mask = torch.rand(local_model_obj[key_modifying].shape)
                 torch.sub(local_model_obj[key_modifying], random_mask)
+
+        if parameters['shift_amount'] != 0:
+            shift_weights(local_model_obj, parameters['shift_amount'])
 
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         

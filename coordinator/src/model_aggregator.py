@@ -51,7 +51,24 @@ class ModelAggregator():
             for idx, i in enumerate(self.c):
                 self.c[idx][k] = torch.zeros(self.global_weights[k].shape, dtype=self.global_weights[k].dtype)
 
+    def shift_weights(self,state_dict, shift_amount):
+        power = (1<<shift_amount)
+
+        for key, value in state_dict.items():
+            new_tensor = torch.zeros(value.shape, dtype=torch.float64)
+            if "bias" not in key:
+                for row in range(value.shape[0]):
+                    for col in range(value.shape[1]):
+                        new_tensor[row][col] = state_dict[key][row][col]/power
+            else:
+                for b in range(len(value)):
+                    new_tensor[b] = state_dict[key][b]/power
+
+            state_dict[key] = new_tensor
+
     def add_hospital_data(self, weights, local_size):
+        if self.parameters['shift_amount'] != 0:
+            self.shift_weights(weights, self.parameters['shift_amount'])
         self.local_weights.append(weights)
         self.local_sizes.append(local_size)
     

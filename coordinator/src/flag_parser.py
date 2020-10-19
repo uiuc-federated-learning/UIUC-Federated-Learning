@@ -49,6 +49,7 @@ class Parser:
         parser.add_argument('--global_print_frequency', type=int, default=1, help="frequency after which global results need to be printed to the console")
         parser.add_argument('--global_store_frequency', type=int, default=100, help="frequency after which global results should be written to CSV")
         parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
+        parser.add_argument('--shift_amount', type=int, default=0, help="number of bits to shift when quantizing weights")
 
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('--ports', nargs='*', default=[], help="Usage: --ports 8001 8002 8003 ... The ports the hospital gRPC servers are running on")

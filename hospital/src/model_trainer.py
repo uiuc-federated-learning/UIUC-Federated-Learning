@@ -118,4 +118,5 @@ class ModelTraining():
 
         self.train_loss_updated.append(sum(local_losses)/len(local_losses)) # Appending global training loss
         self.accuracy(global_model, self.epoch)
+        
         return w , local_size

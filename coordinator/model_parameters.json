@@ -36,5 +36,6 @@
 	"batch_print_frequency" : 100,
 	"global_print_frequency" : 1,
 	"global_store_frequency" : 10,
-	"threshold_test_metric": 0.95
+	"threshold_test_metric": 0.95,
+	"shift_amount": 24
 }
