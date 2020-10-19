@@ -53,11 +53,13 @@ class Parser:
 
         parser.add_argument('--port', type=int, required=True, default = None, help="port to run the gRPC server on")
 
-        self.parameters = parser.parse_args()
+        self.parameters = {}
 
         with open('model_parameters.json') as f:
             json_vars = json.load(f)
+            self.parameters.update(json_vars)
 
-        self.parameters = vars(self.parameters)
-        self.parameters.update(json_vars)
+        flag_params = parser.parse_args()
+        self.parameters.update(vars(flag_params))
+    
         return self.parameters
