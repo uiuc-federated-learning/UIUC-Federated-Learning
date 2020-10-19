@@ -6,6 +6,9 @@ import secrets
 import pickle
 import torch
 
+from randomgen import AESCounter
+from numpy.random import Generator
+
 import federated_pb2
 import federated_pb2_grpc
 
@@ -34,6 +37,14 @@ def shift_weights(state_dict, shift_amount):
                 new_tensor[b] = state_dict[key][b]*power
         state_dict[key] = new_tensor
 
+def mask_weights(local_model_obj, positive_keys, negative_keys):
+    for multiplier, keys in ((1, positive_keys), (-1, negative_keys)):
+        for key in keys:
+            aes_ctr = Generator(AESCounter(key))
+            for layer_name in local_model_obj.keys():
+                random_mask = aes_ctr.integers(-2**62, 2**62, local_model_obj[layer_name].shape)
+                local_model_obj[layer_name] += multiplier * random_mask
+
 class Hospital(federated_pb2_grpc.HospitalServicer):
     def __init__(self):
         self.positive_keys = []
@@ -58,22 +69,9 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
     def ComputeUpdatedModel(self, global_model, context):
         local_model_obj, train_samples = model_trainer.ComputeUpdatedModel(global_model.model_obj)
-        
-        for key in self.positive_keys:
-            torch.manual_seed(key)
-            for key_modifying in local_model_obj.keys():
-                random_mask = torch.rand(local_model_obj[key_modifying].shape)
-                torch.add(local_model_obj[key_modifying], random_mask)
-            
-        for key in self.negative_keys:
-            torch.manual_seed(key)
-            for key_modifying in local_model_obj.keys():
-                random_mask = torch.rand(local_model_obj[key_modifying].shape)
-                torch.sub(local_model_obj[key_modifying], random_mask)
 
-        if parameters['shift_amount'] != 0:
-            shift_weights(local_model_obj, parameters['shift_amount'])
-
+        shift_weights(local_model_obj, parameters['shift_amount'])
+        mask_weights(local_model_obj, self.positive_keys, self.negative_keys)
         print(local_model_obj)
 
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)

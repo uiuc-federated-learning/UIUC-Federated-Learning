@@ -22,7 +22,7 @@ class Parser:
         parser.add_argument('--model', type=str, default="MLP", help="network structure to be used for training", choices=['LR', 'MLP', 'CNN'])
         parser.add_argument('--device', type=str, default="cpu", help="device for Torch", choices=['cpu', 'gpu'])
         parser.add_argument('--frac_clients', type=float, default=0.1, help="proportion of clients to use for local updates")
-        parser.add_argument('--global_optimizer', type=str, default='fedavg', help="global optimizer to be used", choices=['fedavg', 'fedavgm', 'scaffold', 'fedadam', 'fedyogi'])
+        parser.add_argument('--global_optimizer', type=str, default='fedavg', help="global optimizer to be used", choices=['fedavg', 'fedavgm', 'scaffold', 'fedadam', 'fedyogi', 'simpleavg'])
         parser.add_argument('--global_epochs', type=int, default=100, help="number of global federated rounds")
         parser.add_argument('--global_lr', type=float, default=1, help="learning rate for global steps")
         parser.add_argument('--local_optimizer', type=str, default='sgd', help="local optimizer to be used", choices=['sgd', 'adam', 'pgd', 'scaffold'])

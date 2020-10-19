@@ -67,12 +67,13 @@ class ModelAggregator():
             state_dict[key] = new_tensor
 
     def add_hospital_data(self, weights, local_size):
-        if self.parameters['shift_amount'] != 0:
-            self.shift_weights(weights, self.parameters['shift_amount'])
         self.local_weights.append(weights)
         self.local_sizes.append(local_size)
     
     def aggregate(self):
+        # if self.parameters['shift_amount'] != 0:
+        #     for weights in self.local_weights:
+        #         self.shift_weights(weights, self.parameters['shift_amount'])
         gw = copy.deepcopy(self.global_weights)
         
         self.global_model.load_state_dict(gw)
@@ -80,6 +81,8 @@ class ModelAggregator():
         self.global_weights = global_aggregate(self.parameters['global_optimizer'], self.global_weights, self.local_weights, self.local_sizes,
                                             self.parameters['global_momentum_param'], self.parameters['global_lr'], self.parameters['beta1'], self.parameters['beta2'],
                                             self.parameters['eps'], self.epoch+1)
+
+        self.shift_weights(self.global_weights, self.parameters['shift_amount'])
 
         self.epoch += 1
         self.global_model.load_state_dict(self.global_weights)
