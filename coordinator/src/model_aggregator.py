@@ -59,10 +59,10 @@ class ModelAggregator():
             if "bias" not in key:
                 for row in range(value.shape[0]):
                     for col in range(value.shape[1]):
-                        new_tensor[row][col] = state_dict[key][row][col]/power
+                        new_tensor[row][col] = float(state_dict[key][row][col])/power
             else:
                 for b in range(len(value)):
-                    new_tensor[b] = state_dict[key][b]/power
+                    new_tensor[b] = float(state_dict[key][b])/power
 
             state_dict[key] = new_tensor
 

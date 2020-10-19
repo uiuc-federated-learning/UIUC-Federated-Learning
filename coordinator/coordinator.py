@@ -48,6 +48,7 @@ if __name__ == "__main__":
     parser = Parser()
     parameters = parser.parse_arguments()
     print('parameters[\'global_epochs\'] = ' + str(parameters['global_epochs']))
+    print('parameters[\'shift_amount\'] = ' + str(parameters['shift_amount']))
 
     aggregator = ModelAggregator(parameters)
 

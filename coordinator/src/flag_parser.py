@@ -26,7 +26,7 @@ class Parser:
         parser.add_argument('--global_epochs', type=int, default=100, help="number of global federated rounds")
         parser.add_argument('--global_lr', type=float, default=1, help="learning rate for global steps")
         parser.add_argument('--local_optimizer', type=str, default='sgd', help="local optimizer to be used", choices=['sgd', 'adam', 'pgd', 'scaffold'])
-        parser.add_argument('--local_epochs', type=int, default=20, help="number of local client training steps")
+        parser.add_argument('--local_epochs', type=int, default=2, help="number of local client training steps")
         parser.add_argument('--local_lr', type=float, default=1e-4, help="learning rate for local updates")
         parser.add_argument('--momentum', type=float, default=0.5, help="momentum value for SGD")
         parser.add_argument('--mu', type=float, default=0.1, help="proximal coefficient for FedProx")
