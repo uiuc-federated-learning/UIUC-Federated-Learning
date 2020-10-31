@@ -51,11 +51,8 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
     def Initialize(self, intialize_req, context):
         print('Initialize called')
-        # print(parameters)
         parser = Parser()
         self.parameters = parser.parse_arguments(intialize_req.parameters)
-        print("Updated Parameters")
-        print(self.parameters)
 
         self.model_trainer = ModelTraining(self.parameters)
 
@@ -88,7 +85,7 @@ def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
     parser = Parser()
-    parameters = parser.parse_arguments("")
+    parameters = parser.parse_arguments(open('system_config.json', 'r').read())
     port = parameters['port']
     server.add_insecure_port('[::]:' + str(port))
     server.start()
