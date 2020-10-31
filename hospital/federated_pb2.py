@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\x08hospital\"\x13\n\x11\x46\x65tchSharedKeyReq\"!\n\x12\x46\x65tchSharedKeyResp\x12\x0b\n\x03key\x18\x01 \x01(\t\"F\n\rInitializeReq\x12\x19\n\x11selfsocketaddress\x18\x01 \x01(\t\x12\x1a\n\x12\x61llsocketaddresses\x18\x02 \x03(\t\"\x10\n\x0eInitializeResp\"\x1a\n\x05Model\x12\x11\n\tmodel_obj\x18\x01 \x01(\x0c\"H\n\x0cTrainedModel\x12\x1e\n\x05model\x18\x01 \x01(\x0b\x32\x0f.hospital.Model\x12\x18\n\x10training_samples\x18\x02 \x01(\x05\x32\xde\x01\n\x08Hospital\x12\x41\n\nInitialize\x12\x17.hospital.InitializeReq\x1a\x18.hospital.InitializeResp\"\x00\x12M\n\x0e\x46\x65tchSharedKey\x12\x1b.hospital.FetchSharedKeyReq\x1a\x1c.hospital.FetchSharedKeyResp\"\x00\x12@\n\x13\x43omputeUpdatedModel\x12\x0f.hospital.Model\x1a\x16.hospital.TrainedModel\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\x08hospital\"\x13\n\x11\x46\x65tchSharedKeyReq\"!\n\x12\x46\x65tchSharedKeyResp\x12\x0b\n\x03key\x18\x01 \x01(\t\"Z\n\rInitializeReq\x12\x19\n\x11selfsocketaddress\x18\x01 \x01(\t\x12\x1a\n\x12\x61llsocketaddresses\x18\x02 \x03(\t\x12\x12\n\nparameters\x18\x03 \x01(\t\"\x10\n\x0eInitializeResp\"\x1a\n\x05Model\x12\x11\n\tmodel_obj\x18\x01 \x01(\x0c\"H\n\x0cTrainedModel\x12\x1e\n\x05model\x18\x01 \x01(\x0b\x32\x0f.hospital.Model\x12\x18\n\x10training_samples\x18\x02 \x01(\x05\x32\xde\x01\n\x08Hospital\x12\x41\n\nInitialize\x12\x17.hospital.InitializeReq\x1a\x18.hospital.InitializeResp\"\x00\x12M\n\x0e\x46\x65tchSharedKey\x12\x1b.hospital.FetchSharedKeyReq\x1a\x1c.hospital.FetchSharedKeyResp\"\x00\x12@\n\x13\x43omputeUpdatedModel\x12\x0f.hospital.Model\x1a\x16.hospital.TrainedModel\"\x00\x62\x06proto3'
 )
 
 
@@ -104,6 +104,13 @@ _INITIALIZEREQ = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='parameters', full_name='hospital.InitializeReq.parameters', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -117,7 +124,7 @@ _INITIALIZEREQ = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=85,
-  serialized_end=155,
+  serialized_end=175,
 )
 
 
@@ -141,8 +148,8 @@ _INITIALIZERESP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=157,
-  serialized_end=173,
+  serialized_start=177,
+  serialized_end=193,
 )
 
 
@@ -173,8 +180,8 @@ _MODEL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=175,
-  serialized_end=201,
+  serialized_start=195,
+  serialized_end=221,
 )
 
 
@@ -212,8 +219,8 @@ _TRAINEDMODEL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=203,
-  serialized_end=275,
+  serialized_start=223,
+  serialized_end=295,
 )
 
 _TRAINEDMODEL.fields_by_name['model'].message_type = _MODEL
@@ -276,8 +283,8 @@ _HOSPITAL = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=278,
-  serialized_end=500,
+  serialized_start=298,
+  serialized_end=520,
   methods=[
   _descriptor.MethodDescriptor(
     name='Initialize',

@@ -3,6 +3,7 @@ import pickle
 import warnings
 import grpc
 import threading
+import json
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
@@ -31,7 +32,8 @@ def iterate_global_model(aggregator, remote_addresses, ports):
 def train_hospital_model(hospital_address, aggregator, all_addresses):
     channel = grpc.insecure_channel(hospital_address)
     stub = federated_pb2_grpc.HospitalStub(channel)
-    initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses)
+    print(parameters)
+    initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses, parameters=json.dumps(parameters))
     stub.Initialize(initReq)
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(aggregator.global_model)))
 

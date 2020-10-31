@@ -5,6 +5,7 @@ import numpy as np
 import secrets
 import pickle
 import torch
+import json
 
 from randomgen import AESCounter
 from numpy.random import Generator
@@ -18,9 +19,6 @@ from src.model_trainer import ModelTraining
 
 import warnings
 warnings.filterwarnings("ignore")
-
-parser = Parser()
-parameters = parser.parse_arguments()
 
 def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
@@ -49,9 +47,18 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
     def __init__(self):
         self.positive_keys = []
         self.negative_keys = []
+        self.parameters = dict()
 
     def Initialize(self, intialize_req, context):
         print('Initialize called')
+        # print(parameters)
+        parser = Parser()
+        self.parameters = parser.parse_arguments(intialize_req.parameters)
+        print("Updated Parameters")
+        print(self.parameters)
+
+        self.model_trainer = ModelTraining(self.parameters)
+
         for hospital_addr in intialize_req.allsocketaddresses:
             if hospital_addr > intialize_req.selfsocketaddress:
                 channel = grpc.insecure_channel(hospital_addr)
@@ -68,11 +75,10 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
-        local_model_obj, train_samples = model_trainer.ComputeUpdatedModel(global_model.model_obj)
+        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model.model_obj)
 
-        shift_weights(local_model_obj, parameters['shift_amount'])
+        shift_weights(local_model_obj, self.parameters['shift_amount'])
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)
-        print(local_model_obj)
 
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         
@@ -81,6 +87,8 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
+    parser = Parser()
+    parameters = parser.parse_arguments("")
     port = parameters['port']
     server.add_insecure_port('[::]:' + str(port))
     server.start()
@@ -88,6 +96,5 @@ def serve():
     server.wait_for_termination()
 
 if __name__ == "__main__":
-    model_trainer = ModelTraining(parameters)
     logging.basicConfig()
     serve()
