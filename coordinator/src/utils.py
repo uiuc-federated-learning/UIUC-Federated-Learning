@@ -35,19 +35,14 @@ def global_aggregate(global_optimizer, global_weights, local_updates, local_size
 			w[key]=(1-alpha)*temp_copy[key]+alpha*w[key]
 		return w
 	elif global_optimizer == 'simpleavg':
-		print('simpleavg')
 		w = copy.deepcopy(global_weights)
 		temp_copy=copy.deepcopy(global_weights)
 
 		for key in w.keys():
 			w[key] = torch.zeros(w[key].shape, dtype=torch.int64)
 			for i in range(len(local_updates)):
-				print('local_updates[i][key]')
-				print(local_updates[i][key])
 				w[key] += local_updates[i][key]
 			w[key] = torch.div(w[key], len(local_sizes))
-			print('w[key]')
-			print(w[key])
 		return w
 	else:
 		raise ValueError('Check the global optimizer for a valid value.')

@@ -51,17 +51,23 @@ class Parser:
         parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
         parser.add_argument('--shift_amount', type=int, default=0, help="number of bits to shift when quantizing weights")
 
-        group = parser.add_mutually_exclusive_group(required=True)
+        group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--ports', nargs='*', default=[], help="Usage: --ports 8001 8002 8003 ... The ports the hospital gRPC servers are running on")
         group.add_argument('--remote_addresses', nargs='*', default=[], help="Usage: 255.255.255.255:port ... for as many address as you'd like")
 
         self.parameters = {}
 
+        flag_params = parser.parse_args()
+        self.parameters.update(vars(flag_params))
+
         with open('model_parameters.json') as f:
             json_vars = json.load(f)
             self.parameters.update(json_vars)
 
-        flag_params = parser.parse_args()
-        self.parameters.update(vars(flag_params))
+        with open('system_config.json') as f:
+            json_vars = json.load(f)
+            self.parameters.update(json_vars)
+
+
     
         return self.parameters

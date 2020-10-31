@@ -32,7 +32,7 @@ def iterate_global_model(aggregator, remote_addresses, ports):
 def train_hospital_model(hospital_address, aggregator, all_addresses):
     channel = grpc.insecure_channel(hospital_address)
     stub = federated_pb2_grpc.HospitalStub(channel)
-    print(parameters)
+    
     initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses, parameters=json.dumps(parameters))
     stub.Initialize(initReq)
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(aggregator.global_model)))
@@ -49,8 +49,6 @@ if __name__ == "__main__":
 
     parser = Parser()
     parameters = parser.parse_arguments()
-    print('parameters[\'global_epochs\'] = ' + str(parameters['global_epochs']))
-    print('parameters[\'shift_amount\'] = ' + str(parameters['shift_amount']))
 
     aggregator = ModelAggregator(parameters)
 

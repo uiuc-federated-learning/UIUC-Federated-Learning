@@ -26,7 +26,6 @@ class StochasticControl(Optimizer):
 		# Setting the passed parameters to the default ``params``
 		defaults = dict(lr=lr, mu=mu, weight_decay=weight_decay)
 			
-		#print(params, defaults)
 		super(StochasticControl, self).__init__(params, defaults)
 
 	def __setstate__(self, state):

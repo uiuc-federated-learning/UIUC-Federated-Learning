@@ -10,9 +10,7 @@
 	"test_batch_size" : 32,
 	"model" : "MLP",
 	"device" : "cpu",
-	"global_epochs" : 2,
 	"frac_clients" : 1,
-	"global_optimizer" : "fedavg",
 	"global_lr" : 1,
 	"local_epochs" : 1,
 	"local_optimizer" : "sgd",
@@ -36,6 +34,5 @@
 	"batch_print_frequency" : 100,
 	"global_print_frequency" : 1,
 	"global_store_frequency" : 10,
-	"threshold_test_metric": 0.95,
-	"shift_amount": 24
+	"threshold_test_metric": 0.95
 }
