@@ -4,6 +4,7 @@ import warnings
 import grpc
 import threading
 import json
+import torch
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
@@ -35,6 +36,10 @@ def train_hospital_model(hospital_address, aggregator, all_addresses):
     
     initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses, parameters=json.dumps(parameters))
     stub.Initialize(initReq)
+
+    some_model = aggregator.global_model
+    torch.save(some_model, "../globalmodel.pt")
+    
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(aggregator.global_model)))
 
     aggregator.add_hospital_data(pickle.loads(hospital_model.model.model_obj), hospital_model.training_samples)

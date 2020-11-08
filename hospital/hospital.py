@@ -72,7 +72,8 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
-        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model.model_obj)
+        global_model_loaded = torch.load('../globalmodel.pt')
+        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model_loaded)
 
         shift_weights(local_model_obj, self.parameters['shift_amount'])
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)

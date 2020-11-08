@@ -86,7 +86,8 @@ class ModelTraining():
     
     def ComputeUpdatedModel(self, model_obj):
         ################################# Client Sampling & Local Training #################################
-        global_model = pickle.loads(model_obj)
+        # global_model = pickle.loads(model_obj)
+        global_model = model_obj
         global_model.train()
         
         self.setVars(global_model.state_dict())
