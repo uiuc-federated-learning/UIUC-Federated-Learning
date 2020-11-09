@@ -1,2 +1,4 @@
 hospital/data
 *.pyc
+env*
+*.pt

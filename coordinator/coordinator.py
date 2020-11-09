@@ -8,6 +8,7 @@ import torch
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
+from src.models import MLP
 import federated_pb2
 import federated_pb2_grpc
 
@@ -36,9 +37,6 @@ def train_hospital_model(hospital_address, aggregator, all_addresses):
     
     initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses, parameters=json.dumps(parameters))
     stub.Initialize(initReq)
-
-    some_model = aggregator.global_model
-    torch.save(some_model, "../globalmodel.pt")
     
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(aggregator.global_model)))
 
@@ -56,6 +54,11 @@ if __name__ == "__main__":
     parameters = parser.parse_arguments()
 
     aggregator = ModelAggregator(parameters)
+
+    # The example input just needs to take the same shape as what we are passing into the network when training.
+    example_input = torch.FloatTensor([[[[1 for k in range(28)] for j in range(28)]] for i in range(20)])
+    trace = torch.jit.trace(aggregator.global_model, example_input)
+    torch.jit.save(trace, "../tracedmodel.pt")
 
     remote_addresses = parameters['remote_addresses']
     ports = parameters['ports']

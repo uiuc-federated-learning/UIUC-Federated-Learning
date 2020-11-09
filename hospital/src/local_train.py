@@ -73,7 +73,7 @@ class LocalUpdate(object):
 		client_controls_list = [client_controls[key] for key in client_controls.keys()]
 		
 		# Set model to ``train`` mode
-		local_model = copy.deepcopy(global_model)
+		local_model = torch.jit.load("../tracedmodel.pt")
 		local_model.train()
 
 		# Set local optimizer
@@ -100,6 +100,7 @@ class LocalUpdate(object):
 
 				images, labels = images.to(self.device), labels.to(self.device)
 				local_model.zero_grad()
+				# print('images.shape:' + str(images.shape))
 				log_probs = local_model(images)
 				loss = self.criterion(log_probs, labels)
 				loss.backward()
