@@ -75,13 +75,15 @@ class ModelTraining():
         self.test_loss.append(self.test_loss_value)
 
         if (self.epoch+1) % self.parameters['global_print_frequency'] == 0 or (self.epoch+1) == self.parameters['global_epochs']:
-            msg = '| Global Round : {0:>4} | TeLoss - {1:>6.4f}, TeAcc - {2:>6.2f} %, TrLoss (U) - {3:>6.4f}'
-
             if self.parameters['train_test_split'] != 1.0:
                 msg = 'TrLoss (A) - {4:>6.4f} % , TrAcc - {5:>6.2f} %'
                 print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0, self.train_loss_updated[-1], 
                                 self.train_loss_all[-1], self.train_accuracy[-1]*100.0))
+            elif len(self.train_loss_updated) == 0:
+                msg = '| Global Round : {0:>4} | TeLoss - {1:>6.4f}, TeAcc - {2:>6.2f} %'
+                print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0))
             else:
+                msg = '| Global Round : {0:>4} | TeLoss - {1:>6.4f}, TeAcc - {2:>6.2f} %, TrLoss (U) - {3:>6.4f}'
                 print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0, self.train_loss_updated[-1]))
     
     def ComputeUpdatedModel(self, model_obj):
@@ -93,6 +95,9 @@ class ModelTraining():
         self.setVars(global_model.state_dict())
 
         self.epoch = 0
+        if self.epoch == 0:
+            print("=> Initial Accuracy:")
+            self.accuracy(global_model, self.epoch)
         
         np.random.seed(randint(1,777)) # Picking a fraction of users to choose for training
         idxs_users = np.random.choice(range(self.parameters['num_users']), max(int(self.parameters['frac_clients']*self.parameters['num_users']), 1), replace=False)
@@ -104,6 +109,8 @@ class ModelTraining():
         local_model = LocalUpdate(self.train_dataset, self.user_groups[0], self.parameters['device'], 
                 self.parameters['train_test_split'], self.parameters['train_batch_size'], self.parameters['test_batch_size'])
 
+        
+        
         w, c_update, c_new, loss, local_size = local_model.local_opt(self.parameters['local_optimizer'], self.parameters['local_lr'], 
                                                 self.parameters['local_epochs'], global_model, self.parameters['momentum'], self.mus, self.c, self.c, 
                                                 self.epoch+1, 1, self.parameters['batch_print_frequency'])

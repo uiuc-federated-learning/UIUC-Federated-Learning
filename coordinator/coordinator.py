@@ -52,8 +52,16 @@ def initialize_hospital(hospital_address, all_addresses):
 def train_hospital_model(hospital_address, aggregator, all_addresses):
     channel = grpc.insecure_channel(hospital_address)
     stub = federated_pb2_grpc.HospitalStub(channel)
+
+    # The example input just needs to take the same shape as what we are passing into the network when training.
+    example_input = torch.FloatTensor([[[[1 for k in range(28)] for j in range(28)]] for i in range(20)])
+    example_input = torch.ones((20,1,28,28))
+    trace = torch.jit.trace(aggregator.global_model, example_input)
+
+    buffer = io.BytesIO()
+    torch.jit.save(trace, buffer)
     
-    hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(aggregator.global_model)))
+    hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(aggregator.global_model), traced_model=buffer.getvalue()))
 
     aggregator.add_hospital_data(pickle.loads(hospital_model.model.model_obj), hospital_model.training_samples)
     print("Received a set of weights from address: " + hospital_address)
@@ -69,12 +77,6 @@ if __name__ == "__main__":
     parameters = parser.parse_arguments()
 
     aggregator = ModelAggregator(parameters)
-
-    # The example input just needs to take the same shape as what we are passing into the network when training.
-    example_input = torch.FloatTensor([[[[1 for k in range(28)] for j in range(28)]] for i in range(20)])
-    example_input = torch.ones((20,1,28,28))
-    trace = torch.jit.trace(aggregator.global_model, example_input)
-    torch.jit.save(trace, "../tracedmodel.pt")
 
     remote_addresses = parameters['remote_addresses']
     ports = parameters['ports']

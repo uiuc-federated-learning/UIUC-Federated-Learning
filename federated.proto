@@ -26,6 +26,7 @@ message InitializeResp {}
 
 message Model {
   bytes model_obj = 1;
+  bytes traced_model = 2;
 }
 
 message TrainedModel {
