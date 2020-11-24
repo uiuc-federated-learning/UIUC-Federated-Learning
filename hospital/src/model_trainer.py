@@ -86,7 +86,7 @@ class ModelTraining():
                 msg = '| Global Round : {0:>4} | TeLoss - {1:>6.4f}, TeAcc - {2:>6.2f} %, TrLoss (U) - {3:>6.4f}'
                 print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0, self.train_loss_updated[-1]))
     
-    def ComputeUpdatedModel(self, model_obj):
+    def ComputeUpdatedModel(self, model_obj, modelbuffer):
         ################################# Client Sampling & Local Training #################################
         # global_model = pickle.loads(model_obj)
         global_model = model_obj
@@ -95,9 +95,8 @@ class ModelTraining():
         self.setVars(global_model.state_dict())
 
         self.epoch = 0
-        if self.epoch == 0:
-            print("=> Initial Accuracy:")
-            self.accuracy(global_model, self.epoch)
+        print("=> Initial Accuracy:")
+        self.accuracy(global_model, self.epoch)
         
         np.random.seed(randint(1,777)) # Picking a fraction of users to choose for training
         idxs_users = np.random.choice(range(self.parameters['num_users']), max(int(self.parameters['frac_clients']*self.parameters['num_users']), 1), replace=False)
@@ -112,7 +111,7 @@ class ModelTraining():
         
         
         w, c_update, c_new, loss, local_size = local_model.local_opt(self.parameters['local_optimizer'], self.parameters['local_lr'], 
-                                                self.parameters['local_epochs'], global_model, self.parameters['momentum'], self.mus, self.c, self.c, 
+                                                self.parameters['local_epochs'], global_model, modelbuffer, self.parameters['momentum'], self.mus, self.c, self.c, 
                                                 self.epoch+1, 1, self.parameters['batch_print_frequency'])
 
         global_model.load_state_dict(w)

@@ -49,7 +49,7 @@ class LocalUpdate(object):
 		self.test_loader = DataLoader(DatasetSplit(dataset, idxs[int(self.train_test_split * len(idxs)):]), 
 												batch_size=self.test_batch_size, shuffle=False)
 
-	def local_opt(self, optimizer, lr, epochs, global_model, momentum=0.5, mu=0.01, client_controls=[], 
+	def local_opt(self, optimizer, lr, epochs, global_model, modelbuffer, momentum=0.5, mu=0.01, client_controls=[], 
 				server_controls=[], global_round=0, client_no=0, batch_print_frequency=100):
 		"""
 		Local client optimization in the form of updates/steps.
@@ -73,7 +73,7 @@ class LocalUpdate(object):
 		client_controls_list = [client_controls[key] for key in client_controls.keys()]
 		
 		# Set model to ``train`` mode
-		local_model = torch.jit.load("../tracedmodel.pt")
+		local_model = torch.jit.load(modelbuffer)
 		local_model.train()
 
 		# Set local optimizer

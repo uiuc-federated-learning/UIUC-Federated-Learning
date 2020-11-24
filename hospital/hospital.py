@@ -7,6 +7,7 @@ import pickle
 import torch
 import json
 import io
+import copy
 
 from randomgen import AESCounter
 from numpy.random import Generator
@@ -74,9 +75,11 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
     def ComputeUpdatedModel(self, global_model, context):
         # Load ScriptModule from io.BytesIO object
         buffer = io.BytesIO(global_model.traced_model)
+        # global_model = pickle.loads(global_model.model_obj)
+        buffercopy = copy.deepcopy(buffer)
         global_model_loaded_jit = torch.jit.load(buffer)
 
-        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(pickle.loads(global_model.model_obj))
+        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model_loaded_jit, buffercopy)
 
         shift_weights(local_model_obj, self.parameters['shift_amount'])
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)
