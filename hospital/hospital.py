@@ -73,6 +73,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
+        print('ComputeUpdatedModel called')
         # Load ScriptModule from io.BytesIO object
         buffer = io.BytesIO(global_model.traced_model)
         # global_model = pickle.loads(global_model.model_obj)

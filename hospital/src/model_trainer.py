@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 import copy
+import os
 
 import torch
 from torchvision import datasets, transforms
@@ -24,12 +25,22 @@ warnings.filterwarnings("ignore")
 class ModelTraining():
     def get_data(self):
         data_dir = 'data/'
-        transformation = transforms.Compose([
-            transforms.ToTensor(), 
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
-        train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transformation)
-        test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transformation)
+        if self.parameters['data_source'] == 'MNIST':
+            transformation = transforms.Compose([
+                transforms.ToTensor(), 
+                transforms.Normalize((0.1307,), (0.3081,))
+            ])
+            train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transformation)
+            test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transformation)
+        elif self.parameters['data_source'] == 'COVID':
+            transformation = transforms.Compose([
+                transforms.Resize(224),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+            train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'train'), transform=transformation)
+            test_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'test'), transform=transformation)
         print("Train and Test Sizes for %s - (%d, %d)"%(self.parameters['data_source'], len(train_dataset), len(test_dataset)))
         return train_dataset, test_dataset
 

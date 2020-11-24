@@ -1,10 +1,13 @@
 import numpy as np
 
 import torch
+from torch import nn
+
 # from torchvision import datasets, transforms
 
 from .models import LR, MLP, CNNMnist
 from .utils import global_aggregate, network_parameters, test_inference
+import torchvision
 
 import copy
 
@@ -32,8 +35,14 @@ class ModelAggregator():
             self.global_model = LR(dim_in=28*28, dim_out=10, seed=self.parameters['seed'])
         elif self.parameters['model'] == 'MLP':
             self.global_model = MLP(dim_in=28*28, dim_hidden=200, dim_out=10, seed=self.parameters['seed'])
+            self.example_input = torch.ones((self.parameters['train_batch_size'],1,28,28))
         elif self.parameters['model'] == 'CNN' and self.parameters['data_source'] == 'MNIST':
             self.global_model = CNNMnist(self.parameters['seed'])
+        elif self.parameters['model'] == 'DENSENET' and self.parameters['data_source'] == 'COVID':
+            self.global_model = torchvision.models.densenet121(pretrained=True)
+            num_ftrs = self.global_model.classifier.in_features
+            self.global_model.classifier = nn.Linear(num_ftrs, 2)
+            self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
         else:
             raise ValueError('Check the model and data source provided in the arguments.')
 

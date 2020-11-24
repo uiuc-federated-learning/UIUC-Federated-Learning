@@ -44,6 +44,15 @@ def global_aggregate(global_optimizer, global_weights, local_updates, local_size
 				w[key] += local_updates[i][key]
 			w[key] = torch.div(w[key], len(local_sizes))
 		return w
+	# elif global_optimizer == 'vmavg':
+	# 	temp_copy=copy.deepcopy(initial_weights)
+	# 	w = copy.deepcopy(initial_weights)
+	# 	for key in w.keys():
+	# 		w[key] -= w[key]
+	# 		for i in range(len(local_updates)):
+	# 			w[key] += torch.true_divide(local_updates[i][key], num_clients).type(w[key].dtype)
+	# 	model.load_state_dict(w)
+	# 	return model
 	else:
 		raise ValueError('Check the global optimizer for a valid value.')
 	
