@@ -3,3 +3,4 @@ grpcio-tools==1.31.0
 torch==1.5.1
 torchvision==0.6.1
 randomgen==1.19.3
+scikit-learn==0.23.2

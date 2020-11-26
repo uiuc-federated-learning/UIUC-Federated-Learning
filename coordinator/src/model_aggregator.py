@@ -10,6 +10,7 @@ from .utils import global_aggregate, network_parameters, test_inference
 import torchvision
 
 import copy
+import itertools
 
 from collections import OrderedDict
 
@@ -65,13 +66,10 @@ class ModelAggregator():
 
         for key, value in state_dict.items():
             new_tensor = torch.zeros(value.shape, dtype=torch.float64)
-            if "bias" not in key:
-                for row in range(value.shape[0]):
-                    for col in range(value.shape[1]):
-                        new_tensor[row][col] = float(state_dict[key][row][col])/power
-            else:
-                for b in range(len(value)):
-                    new_tensor[b] = float(state_dict[key][b])/power
+            dims_to_evaluate = [list(range(dim)) for dim in value.shape]
+            tups = [x for x in itertools.product(*dims_to_evaluate)]
+            for tup in tups:
+                new_tensor[tup] = float(state_dict[key][tup])/power
 
             state_dict[key] = new_tensor
 

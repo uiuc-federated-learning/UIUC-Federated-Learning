@@ -8,6 +8,7 @@ import torch
 import json
 import io
 import copy
+import itertools
 
 from randomgen import AESCounter
 from numpy.random import Generator
@@ -18,6 +19,8 @@ import federated_pb2_grpc
 from src.flag_parser import Parser
 from src.model_trainer import ModelTraining
 
+from pprint import pprint
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -25,15 +28,12 @@ def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
 
     for key, value in state_dict.items():
-        if "bias" not in key:
-            new_tensor = torch.zeros(value.shape, dtype=torch.int64)
-            for row in range(value.shape[0]):
-                for col in range(value.shape[1]):
-                    new_tensor[row][col] = state_dict[key][row][col]*power
-        else:
-            new_tensor = torch.zeros(value.shape, dtype=torch.int64)
-            for b in range(len(value)):
-                new_tensor[b] = state_dict[key][b]*power
+        new_tensor = torch.zeros(value.shape, dtype=torch.int64)
+        dims_to_evaluate = [list(range(dim)) for dim in value.shape]
+        tups = [x for x in itertools.product(*dims_to_evaluate)]
+        for tup in tups:
+            new_tensor[tup] = state_dict[key][tup]*power
+        
         state_dict[key] = new_tensor
 
 def mask_weights(local_model_obj, positive_keys, negative_keys):
@@ -75,12 +75,12 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
     def ComputeUpdatedModel(self, global_model, context):
         print('ComputeUpdatedModel called')
         # Load ScriptModule from io.BytesIO object
-        buffer = io.BytesIO(global_model.traced_model)
-        # global_model = pickle.loads(global_model.model_obj)
-        buffercopy = copy.deepcopy(buffer)
-        global_model_loaded_jit = torch.jit.load(buffer)
+        # buffer = io.BytesIO(global_model.traced_model)
+        global_model = pickle.loads(global_model.model_obj)
+        # buffercopy = copy.deepcopy(buffer)
+        # global_model_loaded_jit = torch.jit.load(buffer)
 
-        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model_loaded_jit, buffercopy)
+        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
 
         shift_weights(local_model_obj, self.parameters['shift_amount'])
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)
@@ -90,7 +90,10 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return local_model
 
 def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options = [
+        ('grpc.max_send_message_length', 288978990),
+        ('grpc.max_receive_message_length', 288978990)
+    ])
     federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
     parser = Parser()
     parameters = parser.parse_arguments(open('system_config.json', 'r').read())

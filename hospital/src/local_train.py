@@ -73,7 +73,10 @@ class LocalUpdate(object):
 		client_controls_list = [client_controls[key] for key in client_controls.keys()]
 		
 		# Set model to ``train`` mode
-		local_model = torch.jit.load(modelbuffer)
+		if modelbuffer != None:
+			local_model = torch.jit.load(modelbuffer)
+		else:
+			local_model = copy.deepcopy(global_model)
 		local_model.train()
 
 		# Set local optimizer
@@ -89,7 +92,7 @@ class LocalUpdate(object):
 		epoch_loss = []
 							 
 		for epoch in range(epochs):
-			
+			print(epoch)
 			batch_loss = []
 			
 			for batch_idx, (images, labels) in enumerate(self.train_loader):

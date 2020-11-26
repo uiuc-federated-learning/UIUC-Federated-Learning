@@ -14,6 +14,8 @@ from .local_train import LocalUpdate
 from .flag_parser import Parser
 
 from collections import OrderedDict
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Subset
 
 from random import randint
 
@@ -41,6 +43,22 @@ class ModelTraining():
             ])
             train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'train'), transform=transformation)
             test_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'test'), transform=transformation)
+
+            if len(train_dataset) == 0 or len(test_dataset) == 0:
+                print('COVID Dataset needs to be downloaded into the data/fedcovid directory.')
+                print('Download it at: https://drive.google.com/u/1/uc?id=1KLTZGOhxzczTXMFI4z6WlYLUC0VO_oGz&export=download')
+
+            # # Split the indices in a stratified way
+            # trainindices = np.arange(len(test_dataset))
+            # train_indices, _ = train_test_split(trainindices, train_size=100, stratify=train_dataset.targets)
+
+            # testindices = np.arange(len(test_dataset))
+            # test_indices, _ = train_test_split(testindices, train_size=100, stratify=test_dataset.targets)
+
+            # # Warp into Subsets and DataLoaders
+            # train_dataset = Subset(train_dataset, train_indices)
+            # test_dataset = Subset(test_dataset, test_indices)
+
         print("Train and Test Sizes for %s - (%d, %d)"%(self.parameters['data_source'], len(train_dataset), len(test_dataset)))
         return train_dataset, test_dataset
 
