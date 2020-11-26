@@ -3,3 +3,4 @@ hospital/data
 env*
 *.pt
 .vscode/
+.DS_store
