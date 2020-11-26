@@ -75,12 +75,12 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
     def ComputeUpdatedModel(self, global_model, context):
         print('ComputeUpdatedModel called')
         # Load ScriptModule from io.BytesIO object
-        # buffer = io.BytesIO(global_model.traced_model)
-        global_model = pickle.loads(global_model.model_obj)
-        # buffercopy = copy.deepcopy(buffer)
-        # global_model_loaded_jit = torch.jit.load(buffer)
+        # global_model = pickle.loads(global_model.model_obj)
+        buffer = io.BytesIO(global_model.traced_model)
+        buffercopy = copy.deepcopy(buffer)
+        global_model_loaded_jit = torch.jit.load(buffer)
 
-        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
+        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model_loaded_jit, buffercopy)
 
         shift_weights(local_model_obj, self.parameters['shift_amount'])
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)

@@ -72,11 +72,12 @@ class LocalUpdate(object):
 		server_controls_list = [server_controls[key] for key in server_controls.keys()]
 		client_controls_list = [client_controls[key] for key in client_controls.keys()]
 		
-		# Set model to ``train`` mode
+		# If using JIT, need to copy the buffer and load the model since we can't deepcopy a jitted model.
 		if modelbuffer != None:
 			local_model = torch.jit.load(modelbuffer)
 		else:
 			local_model = copy.deepcopy(global_model)
+		# Set model to ``train`` mode
 		local_model.train()
 
 		# Set local optimizer
