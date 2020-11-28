@@ -6,13 +6,15 @@ import threading
 import json
 import torch
 import io
-from timeit import timeit
+from time import time
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
 from src.models import MLP
 import federated_pb2
 import federated_pb2_grpc
+
+MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
 
 
 def iterate_global_model(aggregator, remote_addresses, ports):
@@ -21,17 +23,18 @@ def iterate_global_model(aggregator, remote_addresses, ports):
 
     
     # The example input just needs to take the same shape as what we are passing into the network when training.
-    start = timeit()
+    print('Tracing model')
+    start = time()
     trace = torch.jit.trace(aggregator.global_model, aggregator.example_input)
-    end = timeit()
-    print('Traced model in %d seconds'.format(end - start))
+    end = time()
+    print('Traced model in {} seconds'.format(end - start,))
 
-    print('Saving model')
-    start = timeit()
+    print('Saving model')   
+    start = time()
     buffer = io.BytesIO()
     torch.jit.save(trace, buffer)
-    end = timeit()
-    print('Saved model in %d seconds'.format(end - start))
+    end = time()
+    print('Saved model in {} seconds'.format(end - start))
 
     thread_list = []
     for i in range(len(remote_addresses)):
@@ -66,8 +69,8 @@ def initialize_hospital(hospital_address, all_addresses):
 
 def train_hospital_model(hospital_address, global_model, traced_model_bytes, all_addresses):
     channel = grpc.insecure_channel(hospital_address, options=[
-        ('grpc.max_send_message_length', 288978990),
-        ('grpc.max_receive_message_length', 288978990)
+        ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH)
     ])
     stub = federated_pb2_grpc.HospitalStub(channel)
     

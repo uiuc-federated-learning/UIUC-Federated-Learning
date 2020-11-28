@@ -24,6 +24,9 @@ from pprint import pprint
 import warnings
 warnings.filterwarnings("ignore")
 
+MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
+
+
 def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
 
@@ -91,8 +94,8 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options = [
-        ('grpc.max_send_message_length', 288978990),
-        ('grpc.max_receive_message_length', 288978990)
+        ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH)
     ])
     federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
     parser = Parser()
