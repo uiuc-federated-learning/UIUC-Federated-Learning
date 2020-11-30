@@ -16,12 +16,7 @@ import federated_pb2_grpc
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
 
-
-def iterate_global_model(aggregator, remote_addresses, ports):
-    remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
-    print(remote_addresses)
-
-    
+def get_jitted_model_bytes(model, example_input):
     # The example input just needs to take the same shape as what we are passing into the network when training.
     print('Tracing model')
     start = time()
@@ -36,6 +31,12 @@ def iterate_global_model(aggregator, remote_addresses, ports):
     end = time()
     print('Saved model in {} seconds'.format(end - start))
 
+    return buffer
+
+def iterate_global_model(aggregator, remote_addresses, ports):
+    remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
+    print(remote_addresses)
+
     thread_list = []
     for i in range(len(remote_addresses)):
         thread = threading.Thread(target=initialize_hospital, args=(remote_addresses[i], remote_addresses))
@@ -45,6 +46,7 @@ def iterate_global_model(aggregator, remote_addresses, ports):
         thread.join()
 
     for epoch in range(parameters['global_epochs']):
+        buffer = get_jitted_model_bytes(aggregator.global_model, aggregator.example_input)
         thread_list = []
         for i in range(len(remote_addresses)):
             thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], None, buffer.getvalue(), remote_addresses))
