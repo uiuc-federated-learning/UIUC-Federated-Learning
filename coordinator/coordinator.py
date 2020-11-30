@@ -31,7 +31,7 @@ def get_jitted_model_bytes(model, example_input):
     end = time()
     print('Saved model in {} seconds'.format(end - start))
 
-    return buffer
+    return buffer.getvalue()
 
 def iterate_global_model(aggregator, remote_addresses, ports):
     remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
@@ -46,10 +46,10 @@ def iterate_global_model(aggregator, remote_addresses, ports):
         thread.join()
 
     for epoch in range(parameters['global_epochs']):
-        buffer = get_jitted_model_bytes(aggregator.global_model, aggregator.example_input)
+        buffer_bytes = get_jitted_model_bytes(aggregator.global_model, aggregator.example_input)
         thread_list = []
         for i in range(len(remote_addresses)):
-            thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], None, buffer.getvalue(), remote_addresses))
+            thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], None, buffer_bytes, remote_addresses))
             thread_list.append(thread)
             thread.start()
         for thread in thread_list:
