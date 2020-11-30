@@ -24,7 +24,7 @@ from pprint import pprint
 import warnings
 warnings.filterwarnings("ignore")
 
-MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
+MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (gRPC message size)
 
 
 def shift_weights(state_dict, shift_amount):
@@ -39,12 +39,18 @@ def shift_weights(state_dict, shift_amount):
         
         state_dict[key] = new_tensor
 
+# Even though the MIN_INT for torch.int64 is actually -2**63, we need to generate an
+# integer x such that -x is also a 64 bit integer. -(-2**63) = 2**63, which does not
+# fit in a 64 bit number.
+MIN_GENERATEABLE_INT = -2**63 + 1
+MAX_GENERATEABLE_INT =  2**63 - 1
+
 def mask_weights(local_model_obj, positive_keys, negative_keys):
     for multiplier, keys in ((1, positive_keys), (-1, negative_keys)):
         for key in keys:
             aes_ctr = Generator(AESCounter(key))
             for layer_name in local_model_obj.keys():
-                random_mask = aes_ctr.integers(-2**62, 2**62, local_model_obj[layer_name].shape)
+                random_mask = aes_ctr.integers(MIN_GENERATEABLE_INT, MAX_GENERATEABLE_INT, local_model_obj[layer_name].shape, dtype=np.int64, endpoint=True)
                 local_model_obj[layer_name] += multiplier * random_mask
 
 class Hospital(federated_pb2_grpc.HospitalServicer):
