@@ -1,2 +1,6 @@
 hospital/data
 *.pyc
+env*
+*.pt
+.vscode/
+.DS_store

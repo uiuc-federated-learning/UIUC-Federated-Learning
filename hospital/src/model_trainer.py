@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 import copy
+import os
 
 import torch
 from torchvision import datasets, transforms
@@ -13,6 +14,8 @@ from .local_train import LocalUpdate
 from .flag_parser import Parser
 
 from collections import OrderedDict
+from sklearn.model_selection import train_test_split
+from torch.utils.data import Subset
 
 from random import randint
 
@@ -24,12 +27,38 @@ warnings.filterwarnings("ignore")
 class ModelTraining():
     def get_data(self):
         data_dir = 'data/'
-        transformation = transforms.Compose([
-            transforms.ToTensor(), 
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
-        train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transformation)
-        test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transformation)
+        if self.parameters['data_source'] == 'MNIST':
+            transformation = transforms.Compose([
+                transforms.ToTensor(), 
+                transforms.Normalize((0.1307,), (0.3081,))
+            ])
+            train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transformation)
+            test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transformation)
+        elif self.parameters['data_source'] == 'COVID':
+            transformation = transforms.Compose([
+                transforms.Resize(224),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
+            train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'train'), transform=transformation)
+            test_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'test'), transform=transformation)
+
+            if len(train_dataset) == 0 or len(test_dataset) == 0:
+                print('COVID Dataset needs to be downloaded into the data/fedcovid directory.')
+                print('Download it at: https://drive.google.com/u/1/uc?id=1KLTZGOhxzczTXMFI4z6WlYLUC0VO_oGz&export=download')
+
+            # # Split the indices in a stratified way
+            # trainindices = np.arange(len(test_dataset))
+            # train_indices, _ = train_test_split(trainindices, train_size=100, stratify=train_dataset.targets)
+
+            # testindices = np.arange(len(test_dataset))
+            # test_indices, _ = train_test_split(testindices, train_size=100, stratify=test_dataset.targets)
+
+            # # Warp into Subsets and DataLoaders
+            # train_dataset = Subset(train_dataset, train_indices)
+            # test_dataset = Subset(test_dataset, test_indices)
+
         print("Train and Test Sizes for %s - (%d, %d)"%(self.parameters['data_source'], len(train_dataset), len(test_dataset)))
         return train_dataset, test_dataset
 
@@ -75,23 +104,28 @@ class ModelTraining():
         self.test_loss.append(self.test_loss_value)
 
         if (self.epoch+1) % self.parameters['global_print_frequency'] == 0 or (self.epoch+1) == self.parameters['global_epochs']:
-            msg = '| Global Round : {0:>4} | TeLoss - {1:>6.4f}, TeAcc - {2:>6.2f} %, TrLoss (U) - {3:>6.4f}'
-
             if self.parameters['train_test_split'] != 1.0:
                 msg = 'TrLoss (A) - {4:>6.4f} % , TrAcc - {5:>6.2f} %'
                 print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0, self.train_loss_updated[-1], 
                                 self.train_loss_all[-1], self.train_accuracy[-1]*100.0))
+            elif len(self.train_loss_updated) == 0:
+                msg = '| Global Round : {0:>4} | TeLoss - {1:>6.4f}, TeAcc - {2:>6.2f} %'
+                print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0))
             else:
+                msg = '| Global Round : {0:>4} | TeLoss - {1:>6.4f}, TeAcc - {2:>6.2f} %, TrLoss (U) - {3:>6.4f}'
                 print(msg.format(self.epoch+1, self.test_loss[-1], self.test_accuracy[-1]*100.0, self.train_loss_updated[-1]))
     
-    def ComputeUpdatedModel(self, model_obj):
+    def ComputeUpdatedModel(self, model_obj, modelbuffer):
         ################################# Client Sampling & Local Training #################################
-        global_model = pickle.loads(model_obj)
+        # global_model = pickle.loads(model_obj)
+        global_model = model_obj
         global_model.train()
         
         self.setVars(global_model.state_dict())
 
         self.epoch = 0
+        print("=> Initial Accuracy:")
+        self.accuracy(global_model, self.epoch)
         
         np.random.seed(randint(1,777)) # Picking a fraction of users to choose for training
         idxs_users = np.random.choice(range(self.parameters['num_users']), max(int(self.parameters['frac_clients']*self.parameters['num_users']), 1), replace=False)
@@ -103,8 +137,10 @@ class ModelTraining():
         local_model = LocalUpdate(self.train_dataset, self.user_groups[0], self.parameters['device'], 
                 self.parameters['train_test_split'], self.parameters['train_batch_size'], self.parameters['test_batch_size'])
 
+        
+        
         w, c_update, c_new, loss, local_size = local_model.local_opt(self.parameters['local_optimizer'], self.parameters['local_lr'], 
-                                                self.parameters['local_epochs'], global_model, self.parameters['momentum'], self.mus, self.c, self.c, 
+                                                self.parameters['local_epochs'], global_model, modelbuffer, self.parameters['momentum'], self.mus, self.c, self.c, 
                                                 self.epoch+1, 1, self.parameters['batch_print_frequency'])
 
         global_model.load_state_dict(w)

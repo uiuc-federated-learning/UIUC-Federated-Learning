@@ -22,11 +22,11 @@ class Parser:
         parser.add_argument('--model', type=str, default="MLP", help="network structure to be used for training", choices=['LR', 'MLP', 'CNN'])
         parser.add_argument('--device', type=str, default="cpu", help="device for Torch", choices=['cpu', 'gpu'])
         parser.add_argument('--frac_clients', type=float, default=0.1, help="proportion of clients to use for local updates")
-        parser.add_argument('--global_optimizer', type=str, default='fedavg', help="global optimizer to be used", choices=['fedavg', 'fedavgm', 'scaffold', 'fedadam', 'fedyogi'])
+        parser.add_argument('--global_optimizer', type=str, default='fedavg', help="global optimizer to be used", choices=['fedavg', 'fedavgm', 'scaffold', 'fedadam', 'fedyogi', 'simpleavg'])
         parser.add_argument('--global_epochs', type=int, default=100, help="number of global federated rounds")
         parser.add_argument('--global_lr', type=float, default=1, help="learning rate for global steps")
         parser.add_argument('--local_optimizer', type=str, default='sgd', help="local optimizer to be used", choices=['sgd', 'adam', 'pgd', 'scaffold'])
-        parser.add_argument('--local_epochs', type=int, default=20, help="number of local client training steps")
+        parser.add_argument('--local_epochs', type=int, default=2, help="number of local client training steps")
         parser.add_argument('--local_lr', type=float, default=1e-4, help="learning rate for local updates")
         parser.add_argument('--momentum', type=float, default=0.5, help="momentum value for SGD")
         parser.add_argument('--mu', type=float, default=0.1, help="proximal coefficient for FedProx")
@@ -51,17 +51,23 @@ class Parser:
         parser.add_argument('--threshold_test_metric', type=float, default=0.9, help="threshold after which the code should end")
         parser.add_argument('--shift_amount', type=int, default=0, help="number of bits to shift when quantizing weights")
 
-        group = parser.add_mutually_exclusive_group(required=True)
+        group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--ports', nargs='*', default=[], help="Usage: --ports 8001 8002 8003 ... The ports the hospital gRPC servers are running on")
         group.add_argument('--remote_addresses', nargs='*', default=[], help="Usage: 255.255.255.255:port ... for as many address as you'd like")
 
         self.parameters = {}
 
+        flag_params = parser.parse_args()
+        self.parameters.update(vars(flag_params))
+
         with open('model_parameters.json') as f:
             json_vars = json.load(f)
             self.parameters.update(json_vars)
 
-        flag_params = parser.parse_args()
-        self.parameters.update(vars(flag_params))
+        with open('system_config.json') as f:
+            json_vars = json.load(f)
+            self.parameters.update(json_vars)
+
+
     
         return self.parameters

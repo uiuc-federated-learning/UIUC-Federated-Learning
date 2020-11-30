@@ -49,7 +49,7 @@ class LocalUpdate(object):
 		self.test_loader = DataLoader(DatasetSplit(dataset, idxs[int(self.train_test_split * len(idxs)):]), 
 												batch_size=self.test_batch_size, shuffle=False)
 
-	def local_opt(self, optimizer, lr, epochs, global_model, momentum=0.5, mu=0.01, client_controls=[], 
+	def local_opt(self, optimizer, lr, epochs, global_model, modelbuffer, momentum=0.5, mu=0.01, client_controls=[], 
 				server_controls=[], global_round=0, client_no=0, batch_print_frequency=100):
 		"""
 		Local client optimization in the form of updates/steps.
@@ -72,8 +72,12 @@ class LocalUpdate(object):
 		server_controls_list = [server_controls[key] for key in server_controls.keys()]
 		client_controls_list = [client_controls[key] for key in client_controls.keys()]
 		
+		# If using JIT, need to copy the buffer and load the model since we can't deepcopy a jitted model.
+		if modelbuffer != None:
+			local_model = torch.jit.load(modelbuffer)
+		else:
+			local_model = copy.deepcopy(global_model)
 		# Set model to ``train`` mode
-		local_model = copy.deepcopy(global_model)
 		local_model.train()
 
 		# Set local optimizer
@@ -89,7 +93,7 @@ class LocalUpdate(object):
 		epoch_loss = []
 							 
 		for epoch in range(epochs):
-			
+			print(epoch)
 			batch_loss = []
 			
 			for batch_idx, (images, labels) in enumerate(self.train_loader):
@@ -100,6 +104,7 @@ class LocalUpdate(object):
 
 				images, labels = images.to(self.device), labels.to(self.device)
 				local_model.zero_grad()
+				# print('images.shape:' + str(images.shape))
 				log_probs = local_model(images)
 				loss = self.criterion(log_probs, labels)
 				loss.backward()
