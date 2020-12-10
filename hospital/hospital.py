@@ -32,14 +32,15 @@ def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
 
     for key, value in state_dict.items():
-        new_tensor = torch.zeros(value.shape, dtype=torch.int64)
-        dims_to_evaluate = [list(range(dim)) for dim in value.shape]
-        tups = [x for x in itertools.product(*dims_to_evaluate)]
-        for tup in tups:
-            new_tensor[tup] = state_dict[key][tup]*power
-        # state_dict[key] = (state_dict[key]*power).cpu().int()
+        # new_tensor = torch.zeros(value.shape, dtype=torch.int64)
+        # dims_to_evaluate = [list(range(dim)) for dim in value.shape]
+        # tups = [x for x in itertools.product(*dims_to_evaluate)]
+        # for tup in tups:
+        #     new_tensor[tup] = state_dict[key][tup]*power
+        # state_dict[key] = new_tensor
 
-        state_dict[key] = new_tensor
+        state_dict[key] = (state_dict[key]*power).cpu().int()
+
         
         # print('new_tesnor, state_dict[key]')
         # print(new_tensor)
