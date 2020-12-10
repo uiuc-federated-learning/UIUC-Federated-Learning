@@ -39,11 +39,18 @@ class ModelAggregator():
             self.example_input = torch.ones((self.parameters['train_batch_size'],1,28,28))
         elif self.parameters['model'] == 'CNN' and self.parameters['data_source'] == 'MNIST':
             self.global_model = CNNMnist(self.parameters['seed'])
-        elif self.parameters['model'] == 'DENSENET' and self.parameters['data_source'] == 'COVID':
+        elif self.parameters['model'] == 'DENSENET':
             self.global_model = torchvision.models.densenet121(pretrained=True)
+            # Fine tune
+            for param in self.global_model.parameters():
+                param.requires_grad = False
             num_ftrs = self.global_model.classifier.in_features
-            self.global_model.classifier = nn.Linear(num_ftrs, 2)
             self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
+            
+            if self.parameters['data_source'] == 'COVID':
+                self.global_model.classifier = nn.Linear(num_ftrs, 2)
+            elif self.parameters['data_source'] == 'MNIST':
+                self.global_model.classifier = nn.Linear(num_ftrs, 10)
         else:
             raise ValueError('Check the model and data source provided in the arguments.')
 
@@ -66,12 +73,17 @@ class ModelAggregator():
 
         for key, value in state_dict.items():
             new_tensor = torch.zeros(value.shape, dtype=torch.float64)
+            # print(f'before state_dict[{key}] = {state_dict[key]}')
+            # new_tensor += state_dict[key].float() / power
+            # print(f'after state_dict[{key}] = {state_dict[key]}')
+            
             dims_to_evaluate = [list(range(dim)) for dim in value.shape]
             tups = [x for x in itertools.product(*dims_to_evaluate)]
             for tup in tups:
                 new_tensor[tup] = float(state_dict[key][tup])/power
 
             state_dict[key] = new_tensor
+
 
     def add_hospital_data(self, weights, local_size):
         self.local_weights.append(weights)

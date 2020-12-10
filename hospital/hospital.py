@@ -9,6 +9,7 @@ import json
 import io
 import copy
 import itertools
+from time import time
 
 from randomgen import AESCounter
 from numpy.random import Generator
@@ -36,8 +37,15 @@ def shift_weights(state_dict, shift_amount):
         tups = [x for x in itertools.product(*dims_to_evaluate)]
         for tup in tups:
             new_tensor[tup] = state_dict[key][tup]*power
-        
+        # state_dict[key] = (state_dict[key]*power).cpu().int()
+
         state_dict[key] = new_tensor
+        
+        # print('new_tesnor, state_dict[key]')
+        # print(new_tensor)
+        # print(state_dict[key])
+        # print(torch.eq(new_tensor, state_dict[key]))
+        # assert(torch.all(torch.eq(new_tensor, state_dict[key])))
 
 def mask_weights(local_model_obj, positive_keys, negative_keys):
     for multiplier, keys in ((1, positive_keys), (-1, negative_keys)):
@@ -45,6 +53,7 @@ def mask_weights(local_model_obj, positive_keys, negative_keys):
             aes_ctr = Generator(AESCounter(key))
             for layer_name in local_model_obj.keys():
                 random_mask = aes_ctr.integers(-2**62, 2**62, local_model_obj[layer_name].shape)
+                local_model_obj[layer_name] = local_model_obj[layer_name].cpu()
                 local_model_obj[layer_name] += multiplier * random_mask
 
 class Hospital(federated_pb2_grpc.HospitalServicer):
@@ -78,16 +87,27 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
     def ComputeUpdatedModel(self, global_model, context):
         print('ComputeUpdatedModel called')
         # Load ScriptModule from io.BytesIO object
-        # global_model = pickle.loads(global_model.model_obj)
-        buffer = io.BytesIO(global_model.traced_model)
-        buffercopy = copy.deepcopy(buffer)
-        global_model_loaded_jit = torch.jit.load(buffer)
+        global_model = pickle.loads(global_model.model_obj)
+        # buffer = io.BytesIO(global_model.traced_model)
+        # buffercopy = copy.deepcopy(buffer)
+        # global_model_loaded_jit = torch.jit.load(buffer)
 
-        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model_loaded_jit, buffercopy)
+        # print(f"Received model: \n{global_model.state_dict()}")
+        local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
 
+        print('Shifting weights')
+        start = time()
         shift_weights(local_model_obj, self.parameters['shift_amount'])
+        end = time()
+        print(f'Shifting weights took {end-start} seconds')
+        print('Masking weights')
+        start = time()
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)
+        end = time()
+        print(f'Masking weights took {end-start} seconds')
 
+
+        # print(f'Sending Model:\n{local_model_obj}')
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         
         return local_model

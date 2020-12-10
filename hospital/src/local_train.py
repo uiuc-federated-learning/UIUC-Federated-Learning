@@ -3,14 +3,51 @@ from collections import OrderedDict
 
 import torch
 from torch import nn
+import numpy as np
 from torch.utils.data import DataLoader, Dataset
+
 
 from src.optimizers import StochasticControl
 from src.utils import DatasetSplit
 
+def iid(dataset, num_users, seed):
+	"""
+	Divides the given dataset in a IID fashion into specified number of users.
+
+	Args:
+		dataset (tensor) : dataset to be partitioned
+		num_users (int) : # users to be created
+		seed (int) : Random seed value
+	"""
+	np.random.seed(seed)
+	
+	num_items = int(len(dataset) / num_users)
+	rem_items = len(dataset) % num_users
+	if rem_items == 0:
+		print("Each user will get %d samples from the training set."%(num_items))
+	else:
+		print("Each user will get %d samples from the training set. %d samples are discarded."%(num_items, rem_items))
+
+	user_groups = {} 
+	all_idxs = list(range(len(dataset)))
+	
+	for i in range(num_users):
+		user_groups[i] = list(np.random.choice(all_idxs, num_items, replace=False))
+		all_idxs = list(set(all_idxs) - set(user_groups[i]))
+	
+	return user_groups
+
+
+def create_federated_dataloader(image_dataset, batch_size, num_workers, num_clients, client_number, seed=10082020):
+    client_groups = iid(image_dataset, num_clients, seed)
+    subsets = [torch.utils.data.Subset(image_dataset, client_groups[i]) for i in range(num_clients)]
+    dataloader = torch.utils.data.DataLoader(subsets[client_number], batch_size=batch_size,
+                                                shuffle=True, num_workers=num_workers)
+    return dataloader
+
 class LocalUpdate(object):
 	
-	def __init__(self, dataset, idxs, device, train_test_split=0.8,
+	def __init__(self, train_dataset, test_dataset, client_num, num_clients, device, train_test_split=0.8,
 				train_batch_size=32, test_batch_size=32, attack=None,
 				num_classes=None):
 		"""
@@ -31,23 +68,13 @@ class LocalUpdate(object):
 		self.test_batch_size = test_batch_size
 		self.attack = attack
 		self.num_classes = num_classes
-		self.criterion = nn.NLLLoss().to(self.device) # Default criterion set to NLL loss function
+		# self.criterion = nn.NLLLoss().to(self.device) # Default criterion set to NLL loss function
+		self.criterion = nn.CrossEntropyLoss().to(self.device)
 
-		self.train_test(dataset, list(idxs)) # Creating train and test splits
+		# train_idxs = KFold(n_splits=num_clients, random_state=1, shuffle=True).split(train_dataset)[client_num]
 
-	def train_test(self, dataset, idxs):
-		"""
-		Creates the train and test loader using the provided dataset and indexes pertaining to local client
-
-		Args:
-			dataset (tensor) : Global data
-			idxs (list) : List of indexes corresponding to the global data for making it local
-		"""
-
-		self.train_loader = DataLoader(DatasetSplit(dataset, idxs[:int(self.train_test_split * len(idxs))]), 
-												batch_size=self.train_batch_size, shuffle=True)
-		self.test_loader = DataLoader(DatasetSplit(dataset, idxs[int(self.train_test_split * len(idxs)):]), 
-												batch_size=self.test_batch_size, shuffle=False)
+		self.train_loader = create_federated_dataloader(train_dataset, self.train_batch_size, 0, num_clients, client_num)
+		self.test_loader = DataLoader(test_dataset, batch_size=self.test_batch_size)
 
 	def local_opt(self, optimizer, lr, epochs, global_model, modelbuffer, momentum=0.5, mu=0.01, client_controls=[], 
 				server_controls=[], global_round=0, client_no=0, batch_print_frequency=100):
@@ -107,17 +134,21 @@ class LocalUpdate(object):
 				# print('images.shape:' + str(images.shape))
 				log_probs = local_model(images)
 				loss = self.criterion(log_probs, labels)
+				# print('loss before backward: {}'.format(loss))
 				loss.backward()
+				# print('loss after backward: {}'.format(loss))
 				if optimizer in ['fedprox', 'scaffold']:
 					opt.step(optimizer, global_params, server_controls_list, client_controls_list)
 				else:
 					opt.step()
 
 				if (batch_idx+1) % batch_print_frequency == 0:
+					# print('batch_idx: {}, log_probs: {}, labels: {}'.format(batch_idx, log_probs, labels))
 					msg = '| Global Round : {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.6f}'
 					print(msg.format(global_round, epoch, batch_idx * len(images), len(self.train_loader.dataset),
 						100. * batch_idx / len(self.train_loader), loss.item()))
 
+				# print('batch_idx: {} , batch_loss: {}'.format(batch_idx, batch_loss))
 				batch_loss.append(loss.item())
 
 			epoch_loss.append(sum(batch_loss)/len(batch_loss))
