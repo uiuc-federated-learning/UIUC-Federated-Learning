@@ -47,6 +47,8 @@ class ModelTraining():
             if len(train_dataset) == 0 or len(test_dataset) == 0:
                 print('COVID Dataset needs to be downloaded into the data/fedcovid directory.')
                 print('Download it at: https://drive.google.com/u/1/uc?id=1KLTZGOhxzczTXMFI4z6WlYLUC0VO_oGz&export=download')
+        else:
+            raise ValueError("Not a valid data_source type.")
 
             # # Split the indices in a stratified way
             # trainindices = np.arange(len(test_dataset))
@@ -134,7 +136,7 @@ class ModelTraining():
 
 
         
-        local_model = LocalUpdate(self.train_dataset, self.user_groups[0], self.parameters['device'], 
+        local_model = LocalUpdate(self.train_dataset, self.test_dataset, self.parameters['client_num'], self.parameters['num_clients'], self.parameters['device'], 
                 self.parameters['train_test_split'], self.parameters['train_batch_size'], self.parameters['test_batch_size'])
 
         
@@ -151,7 +153,7 @@ class ModelTraining():
         # control_updates.append(c_update)
         local_losses.append(loss)
         local_sizes.append(local_size)
-
+        # print('local losses: {}'.format(local_losses))
         self.train_loss_updated.append(sum(local_losses)/len(local_losses)) # Appending global training loss
         self.accuracy(global_model, self.epoch)
         

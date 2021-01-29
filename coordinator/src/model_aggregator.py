@@ -2,6 +2,7 @@ import numpy as np
 
 import torch
 from torch import nn
+from time import time
 
 # from torchvision import datasets, transforms
 
@@ -39,11 +40,18 @@ class ModelAggregator():
             self.example_input = torch.ones((self.parameters['train_batch_size'],1,28,28))
         elif self.parameters['model'] == 'CNN' and self.parameters['data_source'] == 'MNIST':
             self.global_model = CNNMnist(self.parameters['seed'])
-        elif self.parameters['model'] == 'DENSENET' and self.parameters['data_source'] == 'COVID':
+        elif self.parameters['model'] == 'DENSENET':
             self.global_model = torchvision.models.densenet121(pretrained=True)
+            # Fine tune
+            for param in self.global_model.parameters():
+                param.requires_grad = False
             num_ftrs = self.global_model.classifier.in_features
-            self.global_model.classifier = nn.Linear(num_ftrs, 2)
             self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
+            
+            if self.parameters['data_source'] == 'COVID':
+                self.global_model.classifier = nn.Linear(num_ftrs, 2)
+            elif self.parameters['data_source'] == 'MNIST':
+                self.global_model.classifier = nn.Linear(num_ftrs, 10)
         else:
             raise ValueError('Check the model and data source provided in the arguments.')
 
@@ -65,13 +73,15 @@ class ModelAggregator():
         power = (1<<shift_amount)
 
         for key, value in state_dict.items():
-            new_tensor = torch.zeros(value.shape, dtype=torch.float64)
-            dims_to_evaluate = [list(range(dim)) for dim in value.shape]
-            tups = [x for x in itertools.product(*dims_to_evaluate)]
-            for tup in tups:
-                new_tensor[tup] = float(state_dict[key][tup])/power
+            # new_tensor = torch.zeros(value.shape, dtype=torch.float64)
+            # dims_to_evaluate = [list(range(dim)) for dim in value.shape]
+            # tups = [x for x in itertools.product(*dims_to_evaluate)]
+            # for tup in tups:
+            #     new_tensor[tup] = float(state_dict[key][tup])/power
+            # state_dict[key] = new_tensor
 
-            state_dict[key] = new_tensor
+            state_dict[key] = state_dict[key].float() / power
+
 
     def add_hospital_data(self, weights, local_size):
         self.local_weights.append(weights)
@@ -89,7 +99,10 @@ class ModelAggregator():
                                             self.parameters['global_momentum_param'], self.parameters['global_lr'], self.parameters['beta1'], self.parameters['beta2'],
                                             self.parameters['eps'], self.epoch+1)
 
+        start = time()
         self.shift_weights(self.global_weights, self.parameters['shift_amount'])
+        end = time()
+        print(f'Shifting weights took {end-start} seconds')
 
         self.epoch += 1
         self.global_model.load_state_dict(self.global_weights)

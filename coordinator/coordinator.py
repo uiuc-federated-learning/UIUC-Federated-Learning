@@ -7,6 +7,7 @@ import json
 import torch
 import io
 from time import time
+import copy
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
@@ -39,32 +40,36 @@ def iterate_global_model(aggregator, remote_addresses, ports):
 
     thread_list = []
     for i in range(len(remote_addresses)):
-        thread = threading.Thread(target=initialize_hospital, args=(remote_addresses[i], remote_addresses))
+        thread = threading.Thread(target=initialize_hospital, args=(i, remote_addresses[i], remote_addresses))
         thread_list.append(thread)
         thread.start()
     for thread in thread_list:
         thread.join()
 
     for epoch in range(parameters['global_epochs']):
-        buffer_bytes = get_jitted_model_bytes(aggregator.global_model, aggregator.example_input)
+        # buffer_bytes = get_jitted_model_bytes(aggregator.global_model, aggregator.example_input)
         thread_list = []
         for i in range(len(remote_addresses)):
-            thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], None, buffer_bytes, remote_addresses))
+            thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], aggregator.global_model, None, remote_addresses))
             thread_list.append(thread)
             thread.start()
         for thread in thread_list:
             thread.join()
     
         aggregator.aggregate()
+        # print(f"Aggregated model: {aggregator.global_model.state_dict()}")
         print("Completed epoch %d. Aggregated all model weights." % (epoch))
+        torch.save(aggregator.global_model, f'./save/aggregated_{parameters["model"]}_epoch{epoch}.pts')
     
     print('Completed all epochs.')
 
-def initialize_hospital(hospital_address, all_addresses):
+def initialize_hospital(client_num, hospital_address, all_addresses):
     channel = grpc.insecure_channel(hospital_address)
     stub = federated_pb2_grpc.HospitalStub(channel)
 
-    initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses, parameters=json.dumps(parameters))
+    new_params = copy.deepcopy(parameters)
+    new_params['client_num'] = client_num
+    initReq = federated_pb2.InitializeReq(selfsocketaddress=hospital_address, allsocketaddresses=all_addresses, parameters=json.dumps(new_params))
     stub.Initialize(initReq)
 
     channel.close()
@@ -76,12 +81,12 @@ def train_hospital_model(hospital_address, global_model, traced_model_bytes, all
     ])
     stub = federated_pb2_grpc.HospitalStub(channel)
     
-    print('Calling the gRPC')
-    hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(global_model), traced_model=traced_model_bytes))
-
+    print('Calling the gRPC endpoint')
+    start = time()
+    hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(global_model), traced_model=None))
     aggregator.add_hospital_data(pickle.loads(hospital_model.model.model_obj), hospital_model.training_samples)
-    print("Received a set of weights from address: " + hospital_address)
-
+    end = time()
+    print(f"Received a set of weights from {hospital_address}, took {end-start} seconds")
     channel.close()
 
 if __name__ == "__main__":
