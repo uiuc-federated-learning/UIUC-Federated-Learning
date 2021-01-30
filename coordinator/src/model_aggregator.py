@@ -40,18 +40,23 @@ class ModelAggregator():
             self.example_input = torch.ones((self.parameters['train_batch_size'],1,28,28))
         elif self.parameters['model'] == 'CNN' and self.parameters['data_source'] == 'MNIST':
             self.global_model = CNNMnist(self.parameters['seed'])
-        elif self.parameters['model'] == 'DENSENET':
+        elif self.parameters['model'] == 'DENSENET' and self.parameters['data_source'] == 'COVID':
             self.global_model = torchvision.models.densenet121(pretrained=True)
             # Fine tune
             for param in self.global_model.parameters():
-                param.requires_grad = False
+                param.requires_grad = False if self.parameters['finetune'] else True
             num_ftrs = self.global_model.classifier.in_features
             self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
-            
-            if self.parameters['data_source'] == 'COVID':
-                self.global_model.classifier = nn.Linear(num_ftrs, 2)
-            elif self.parameters['data_source'] == 'MNIST':
-                self.global_model.classifier = nn.Linear(num_ftrs, 10)
+            self.global_model.classifier = nn.Linear(num_ftrs, 2)
+        elif self.parameters['model'] == 'RESNET' and self.parameters['data_source'] == 'COVID':
+            self.global_model = torchvision.models.resnet101(pretrained=True)
+            # Fine tune
+            print(self.global_model.parameters())
+            for param in self.global_model.parameters():
+                param.requires_grad = False if self.parameters['finetune'] else True
+            num_ftrs = self.global_model.fc.in_features
+            self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
+            self.global_model.fc = nn.Linear(num_ftrs, 2)
         else:
             raise ValueError('Check the model and data source provided in the arguments.')
 
