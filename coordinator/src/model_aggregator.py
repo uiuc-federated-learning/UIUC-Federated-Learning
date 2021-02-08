@@ -74,18 +74,8 @@ class ModelAggregator():
             for idx, i in enumerate(self.c):
                 self.c[idx][k] = torch.zeros(self.global_weights[k].shape, dtype=self.global_weights[k].dtype)
 
-    def shift_weights(self,state_dict, shift_amount):
-        power = (1<<shift_amount)
 
-        for key, value in state_dict.items():
-            # new_tensor = torch.zeros(value.shape, dtype=torch.float64)
-            # dims_to_evaluate = [list(range(dim)) for dim in value.shape]
-            # tups = [x for x in itertools.product(*dims_to_evaluate)]
-            # for tup in tups:
-            #     new_tensor[tup] = float(state_dict[key][tup])/power
-            # state_dict[key] = new_tensor
 
-            state_dict[key] = state_dict[key].float() / power
 
 
     def add_hospital_data(self, weights, local_size):
@@ -93,9 +83,6 @@ class ModelAggregator():
         self.local_sizes.append(local_size)
     
     def aggregate(self):
-        # if self.parameters['shift_amount'] != 0:
-        #     for weights in self.local_weights:
-        #         self.shift_weights(weights, self.parameters['shift_amount'])
         gw = copy.deepcopy(self.global_weights)
         
         self.global_model.load_state_dict(gw)
@@ -105,7 +92,7 @@ class ModelAggregator():
                                             self.parameters['eps'], self.epoch+1)
 
         start = time()
-        self.shift_weights(self.global_weights, self.parameters['shift_amount'])
+        # self.interpret_weights(self.global_weights, self.parameters['shift_amount'])
         end = time()
         print(f'Shifting weights took {end-start} seconds')
 

@@ -6,6 +6,24 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
+def interpret_weights(state_dict, shift_amount):
+
+	for key, value in state_dict.items():
+		# if (key == "features.norm0.weight"): print("Preshift weights (no mod):", state_dict[key][:10])
+		state_dict[key] = torch.fmod(state_dict[key], 2**32)
+		z_positive = torch.mul(state_dict[key].le(2**31), state_dict[key])
+		z_negative = torch.mul(state_dict[key].ge(2**31), state_dict[key] - 2**32)
+
+		state_dict[key] = z_positive + z_negative
+
+
+	power = (1<<shift_amount)
+
+	for key, value in state_dict.items():
+		state_dict[key] = state_dict[key].float() / power
+	return state_dict
+
+
 def global_aggregate(global_optimizer, global_weights, local_updates, local_sizes, alpha,
 					global_lr=1., beta1=0.9, beta2=0.999, eps=1e-4, step=None):
 	"""
@@ -26,23 +44,35 @@ def global_aggregate(global_optimizer, global_weights, local_updates, local_size
 	################################ FedAvg ################################
 	# Good illustration provided in SCAFFOLD paper - Equations (1). (https://arxiv.org/pdf/1910.06378.pdf)
 	if global_optimizer == 'fedavg':
-		w = copy.deepcopy(global_weights)
+		w = copy.deepcopy(global_weights).double()
 		temp_copy=copy.deepcopy(global_weights)
 
+		# Add up weights
 		for key in w.keys():
-			for i in range(len(local_updates)):
-				w[key] += torch.div(local_updates[i][key], len(local_sizes))
-			w[key]=(1-alpha)*temp_copy[key]+alpha*w[key]
-		return w
-	elif global_optimizer == 'simpleavg':
-		w = copy.deepcopy(global_weights)
-		temp_copy=copy.deepcopy(global_weights)
-
-		for key in w.keys():
-			w[key] = torch.zeros(w[key].shape, dtype=torch.int64)
 			for i in range(len(local_updates)):
 				w[key] += local_updates[i][key]
+		
+		# Interpret Weights
+		interpret_weights(w, 24) # HARD CODE
+
+		for key in w.keys():
+			w[key] = (1-alpha)*temp_copy[key]+alpha*torch.div(w[key], len(local_sizes))
+		return w
+	elif global_optimizer == 'simpleavg':
+		# TODO: remove deepcopy
+		w = copy.deepcopy(global_weights)
+
+		for key in w.keys():
+			w[key] = torch.zeros(w[key].shape, dtype=torch.double)
+			for i in range(len(local_updates)):
+				w[key] += local_updates[i][key]
+
+		# TODO: Hard Code
+		w = interpret_weights(w, 24)
+
+		for key in w.keys():
 			w[key] = torch.div(w[key], len(local_sizes))
+			
 		return w
 	else:
 		raise ValueError('Check the global optimizer for a valid value.')

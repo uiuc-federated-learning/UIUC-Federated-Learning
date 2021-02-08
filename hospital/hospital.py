@@ -32,31 +32,33 @@ def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
 
     for key, value in state_dict.items():
-        # new_tensor = torch.zeros(value.shape, dtype=torch.int64)
-        # dims_to_evaluate = [list(range(dim)) for dim in value.shape]
-        # tups = [x for x in itertools.product(*dims_to_evaluate)]
-        # for tup in tups:
-        #     new_tensor[tup] = state_dict[key][tup]*power
-        # state_dict[key] = new_tensor
-
-        state_dict[key] = (state_dict[key]*power).cpu().int()
-
-        
-        # print('new_tesnor, state_dict[key]')
-        # print(new_tensor)
-        # print(state_dict[key])
-        # print(torch.eq(new_tensor, state_dict[key]))
-        # assert(torch.all(torch.eq(new_tensor, state_dict[key])))
+        state_dict[key] = (state_dict[key]*power).cpu()
+        state_dict[key] = state_dict[key].int()
+    
+    
 
 def mask_weights(local_model_obj, positive_keys, negative_keys):
     for multiplier, keys in ((1, positive_keys), (-1, negative_keys)):
         for key in keys:
             aes_ctr = Generator(AESCounter(key))
             for layer_name in local_model_obj.keys():
-                random_mask = aes_ctr.integers(-2**62, 2**62, local_model_obj[layer_name].shape)
-                local_model_obj[layer_name] = local_model_obj[layer_name].cpu()
-                local_model_obj[layer_name] += multiplier * random_mask
+                random_mask = aes_ctr.integers(0, 2**32, local_model_obj[layer_name].shape)
 
+                local_model_obj[layer_name] = local_model_obj[layer_name].cpu()
+                
+                local_model_obj[layer_name] += multiplier * random_mask
+                
+                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**32)
+
+                only_positive = torch.mul(local_model_obj[layer_name].ge(0), local_model_obj[layer_name])
+                only_negative = torch.mul(local_model_obj[layer_name].le(0), local_model_obj[layer_name]+(2**32))
+                local_model_obj[layer_name] = only_positive + only_negative
+
+                assert(torch.min(local_model_obj[layer_name]) >= 0)
+
+                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**32)
+
+                
 class Hospital(federated_pb2_grpc.HospitalServicer):
     def __init__(self):
         self.positive_keys = []
@@ -89,11 +91,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         print('ComputeUpdatedModel called')
         # Load ScriptModule from io.BytesIO object
         global_model = pickle.loads(global_model.model_obj)
-        # buffer = io.BytesIO(global_model.traced_model)
-        # buffercopy = copy.deepcopy(buffer)
-        # global_model_loaded_jit = torch.jit.load(buffer)
-
-        # print(f"Received model: \n{global_model.state_dict()}")
+        
         local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
 
         print('Shifting weights')
