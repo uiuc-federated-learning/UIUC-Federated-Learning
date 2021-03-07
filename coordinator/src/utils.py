@@ -6,13 +6,15 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
+BITS = 62
+
 def interpret_weights(state_dict, shift_amount):
 
 	for key, value in state_dict.items():
 		# if (key == "features.norm0.weight"): print("Preshift weights (no mod):", state_dict[key][:10])
-		state_dict[key] = torch.fmod(state_dict[key], 2**32)
-		z_positive = torch.mul(state_dict[key].le(2**31), state_dict[key])
-		z_negative = torch.mul(state_dict[key].ge(2**31), state_dict[key] - 2**32)
+		state_dict[key] = torch.fmod(state_dict[key], 2**BITS)
+		z_positive = torch.mul(state_dict[key].le(2**(BITS-1)), state_dict[key])
+		z_negative = torch.mul(state_dict[key].ge(2**(BITS-1)), state_dict[key] - 2**BITS)
 
 		state_dict[key] = z_positive + z_negative
 

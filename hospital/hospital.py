@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
-
+BITS = 62
 
 def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
@@ -38,25 +38,26 @@ def shift_weights(state_dict, shift_amount):
     
 
 def mask_weights(local_model_obj, positive_keys, negative_keys):
+    
     for multiplier, keys in ((1, positive_keys), (-1, negative_keys)):
         for key in keys:
             aes_ctr = Generator(AESCounter(key))
             for layer_name in local_model_obj.keys():
-                random_mask = aes_ctr.integers(0, 2**32, local_model_obj[layer_name].shape)
+                random_mask = aes_ctr.integers(0, 2**BITS, local_model_obj[layer_name].shape)
 
-                local_model_obj[layer_name] = local_model_obj[layer_name].cpu()
+                local_model_obj[layer_name] = local_model_obj[layer_name].type(torch.int64).cpu()
                 
                 local_model_obj[layer_name] += multiplier * random_mask
                 
-                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**32)
+                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
 
                 only_positive = torch.mul(local_model_obj[layer_name].ge(0), local_model_obj[layer_name])
-                only_negative = torch.mul(local_model_obj[layer_name].le(0), local_model_obj[layer_name]+(2**32))
+                only_negative = torch.mul(local_model_obj[layer_name].le(0), local_model_obj[layer_name]+(2**BITS))
                 local_model_obj[layer_name] = only_positive + only_negative
 
                 assert(torch.min(local_model_obj[layer_name]) >= 0)
 
-                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**32)
+                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
 
                 
 class Hospital(federated_pb2_grpc.HospitalServicer):
