@@ -6,28 +6,27 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
-BITS = 62
+BITS = 64
 
-def interpret_weights(state_dict, shift_amount):
+def interpret_weights(state_dict, new_dict, shift_amount):
 
-	for key, value in state_dict.items():
+	#for key, value in state_dict.items():
+		# print("TYPE", type(state_dict[key][0][0][0][0]), state_dict[key].shape)
 		# if (key == "features.norm0.weight"): print("Preshift weights (no mod):", state_dict[key][:10])
-		state_dict[key] = torch.fmod(state_dict[key], 2**BITS)
-		z_positive = torch.mul(state_dict[key].le(2**(BITS-1)), state_dict[key])
-		z_negative = torch.mul(state_dict[key].ge(2**(BITS-1)), state_dict[key] - 2**BITS)
+		# state_dict[key] = torch.fmod(state_dict[key], 2**BITS)
+		#z_positive = torch.mul(state_dict[key].le(2**(BITS-1)), state_dict[key])
+		#z_negative = torch.mul(state_dict[key].ge(2**(BITS-1)), state_dict[key] - 2**BITS)
 
-		state_dict[key] = z_positive + z_negative
-
-
+		#state_dict[key] = z_positive + z_negative
 	power = (1<<shift_amount)
 
 	for key, value in state_dict.items():
-		state_dict[key] = state_dict[key].float() / power
-	return state_dict
+		new_dict[key] = (state_dict[key].double() / power).float()
+	# return new_dict
 
 
 def global_aggregate(global_optimizer, global_weights, local_updates, local_sizes, alpha,
-					global_lr=1., beta1=0.9, beta2=0.999, eps=1e-4, step=None):
+					global_lr=1., beta1=0.9, beta2=0.999, eps=1e-4, step=None, shift_amount=24):
 	"""
 	Aggregates the local client updates to find a focused global update.
 
@@ -52,30 +51,32 @@ def global_aggregate(global_optimizer, global_weights, local_updates, local_size
 		# Add up weights
 		for key in w.keys():
 			for i in range(len(local_updates)):
-				w[key] += local_updates[i][key]
+				w[key] += torch.div(local_updates[i][key], len(local_sizes))
 		
 		# Interpret Weights
-		interpret_weights(w, 24) # HARD CODE
+		interpret_weights(w, shift_amount) # HARD CODE
 
 		for key in w.keys():
-			w[key] = (1-alpha)*temp_copy[key]+alpha*torch.div(w[key], len(local_sizes))
+			w[key] = (1-alpha)*temp_copy[key]+alpha*w[key]
 		return w
 	elif global_optimizer == 'simpleavg':
 		# TODO: remove deepcopy
 		w = copy.deepcopy(global_weights)
+		w1 = copy.deepcopy(global_weights)
 
 		for key in w.keys():
-			w[key] = torch.zeros(w[key].shape, dtype=torch.double)
+			w[key] = torch.zeros(w[key].shape, dtype=torch.long)
+			w1[key] = torch.zeros(w[key].shape, dtype=torch.float)
 			for i in range(len(local_updates)):
 				w[key] += local_updates[i][key]
 
 		# TODO: Hard Code
-		w = interpret_weights(w, 24)
+		interpret_weights(w, w1, 24)
 
-		for key in w.keys():
-			w[key] = torch.div(w[key], len(local_sizes))
+		for key in w1.keys():
+			w1[key] = torch.div(w1[key], len(local_sizes))
 			
-		return w
+		return w1
 	else:
 		raise ValueError('Check the global optimizer for a valid value.')
 	

@@ -62,10 +62,10 @@ def test_inference(global_model, test_dataset, device, test_batch_size=128):
 
 	for batch_idx, (images, labels) in enumerate(test_loader):
 
-		images, labels = images.to(device), labels.to(device)
+		images_1, labels_1 = images.to(device), labels.to(device)
 
-		outputs = global_model(images)
-		batch_loss = criterion(outputs, labels)
+		outputs = global_model(images_1)
+		batch_loss = criterion(outputs, labels_1)
 		loss += batch_loss.item()
 
 		# Prediction

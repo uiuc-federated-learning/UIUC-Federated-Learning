@@ -8,6 +8,7 @@ import torch
 import io
 from time import time
 import copy
+import os
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
@@ -16,6 +17,7 @@ import federated_pb2
 import federated_pb2_grpc
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
+INT_MAX = 2147483647
 
 def get_jitted_model_bytes(model, example_input):
     # The example input just needs to take the same shape as what we are passing into the network when training.
@@ -38,6 +40,13 @@ def iterate_global_model(aggregator, remote_addresses, ports):
     remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
     print(remote_addresses)
 
+    if os.environ.get('https_proxy'):
+        del os.environ['https_proxy']
+    if os.environ.get('http_proxy'):
+        del os.environ['http_proxy']
+    #unset http_proxy
+    #unset https_proxy
+
     thread_list = []
     for i in range(len(remote_addresses)):
         thread = threading.Thread(target=initialize_hospital, args=(i, remote_addresses[i], remote_addresses))
@@ -45,6 +54,8 @@ def iterate_global_model(aggregator, remote_addresses, ports):
         thread.start()
     for thread in thread_list:
         thread.join()
+
+    print("Done Init")
 
     for epoch in range(parameters['global_epochs']):
         # buffer_bytes = get_jitted_model_bytes(aggregator.global_model, aggregator.example_input)
@@ -64,7 +75,10 @@ def iterate_global_model(aggregator, remote_addresses, ports):
     print('Completed all epochs.')
 
 def initialize_hospital(client_num, hospital_address, all_addresses):
-    channel = grpc.insecure_channel(hospital_address)
+    print("Attempting to connenct to", hospital_address)
+    # with open('../security/roots.pem', 'rb') as f:
+    # credentials = grpc.ssl_channel_credentials()
+    channel = grpc.insecure_channel(hospital_address, options=[('grpc.enable_http_proxy', 0)])
     stub = federated_pb2_grpc.HospitalStub(channel)
 
     new_params = copy.deepcopy(parameters)
@@ -75,9 +89,12 @@ def initialize_hospital(client_num, hospital_address, all_addresses):
     channel.close()
 
 def train_hospital_model(hospital_address, global_model, traced_model_bytes, all_addresses):
+    # credentials = grpc.ssl_channel_credentials()
     channel = grpc.insecure_channel(hospital_address, options=[
         ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
-        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH)
+        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+        # ("grpc.max_connection_age_ms", INT_MAX), 
+        # ("grpc.max_connection_idle_ms", INT_MAX)
     ])
     stub = federated_pb2_grpc.HospitalStub(channel)
     

@@ -75,7 +75,7 @@ class LocalUpdate(object):
 		self.train_loader = create_federated_dataloader(train_dataset, self.train_batch_size, 0, num_clients, client_num)
 		self.test_loader = DataLoader(test_dataset, batch_size=self.test_batch_size)
 
-	def local_opt(self, optimizer, lr, epochs, global_model, modelbuffer, momentum=0.5, mu=0.01, client_controls=[], 
+	def local_opt(self, optimizer, lr, epochs, global_model, modelbuffer, momentum=0, mu=0.01, client_controls=[], 
 				server_controls=[], global_round=0, client_no=0, batch_print_frequency=100):
 		"""
 		Local client optimization in the form of updates/steps.
@@ -130,24 +130,19 @@ class LocalUpdate(object):
 
 				images, labels = images.to(self.device), labels.to(self.device)
 				local_model.zero_grad()
-				# print('images.shape:' + str(images.shape))
 				log_probs = local_model(images)
 				loss = self.criterion(log_probs, labels)
-				# print('loss before backward: {}'.format(loss))
 				loss.backward()
-				# print('loss after backward: {}'.format(loss))
 				if optimizer in ['fedprox', 'scaffold']:
 					opt.step(optimizer, global_params, server_controls_list, client_controls_list)
 				else:
 					opt.step()
 
 				if (batch_idx+1) % batch_print_frequency == 0:
-					# print('batch_idx: {}, log_probs: {}, labels: {}'.format(batch_idx, log_probs, labels))
 					msg = '| Global Round : {} | Local Epoch : {} | [{}/{} ({:.0f}%)]\tLoss: {:.6f}'
 					print(msg.format(global_round, epoch, batch_idx * len(images), len(self.train_loader.dataset),
 						100. * batch_idx / len(self.train_loader), loss.item()))
 
-				# print('batch_idx: {} , batch_loss: {}'.format(batch_idx, batch_loss))
 				batch_loss.append(loss.item())
 
 			epoch_loss.append(sum(batch_loss)/len(batch_loss))

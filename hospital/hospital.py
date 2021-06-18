@@ -26,14 +26,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
-BITS = 62
+BITS = 64
 
 def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
 
     for key, value in state_dict.items():
-        state_dict[key] = (state_dict[key]*power).cpu()
-        state_dict[key] = state_dict[key].int()
+        state_dict[key] = (state_dict[key].double()*power).long().cpu()
+        #state_dict[key] = state_dict[key].int()
     
     
 
@@ -43,21 +43,23 @@ def mask_weights(local_model_obj, positive_keys, negative_keys):
         for key in keys:
             aes_ctr = Generator(AESCounter(key))
             for layer_name in local_model_obj.keys():
-                random_mask = aes_ctr.integers(0, 2**BITS, local_model_obj[layer_name].shape)
+                random_mask = aes_ctr.integers(-(2**(BITS-1)), (2**(BITS-1)) - 1, local_model_obj[layer_name].shape)
+                #random_mask = aes_ctr.integers(0, 2**BITS, local_model_obj[layer_name].shape)
 
-                local_model_obj[layer_name] = local_model_obj[layer_name].type(torch.int64).cpu()
+                local_model_obj[layer_name] = local_model_obj[layer_name].long().cpu() # Convert to int
+                # print("Random mask type:", type(random_mask[0][0][0]))
                 
                 local_model_obj[layer_name] += multiplier * random_mask
                 
-                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
+                # local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
 
-                only_positive = torch.mul(local_model_obj[layer_name].ge(0), local_model_obj[layer_name])
-                only_negative = torch.mul(local_model_obj[layer_name].le(0), local_model_obj[layer_name]+(2**BITS))
-                local_model_obj[layer_name] = only_positive + only_negative
+                # only_positive = torch.mul(local_model_obj[layer_name].ge(0), local_model_obj[layer_name])
+                # only_negative = torch.mul(local_model_obj[layer_name].le(0), local_model_obj[layer_name]+(2**BITS))
+                # local_model_obj[layer_name] = only_positive + only_negative
 
-                assert(torch.min(local_model_obj[layer_name]) >= 0)
+                # assert(torch.min(local_model_obj[layer_name]) >= 0)
 
-                local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
+                # local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
 
                 
 class Hospital(federated_pb2_grpc.HospitalServicer):
@@ -75,6 +77,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
         for hospital_addr in intialize_req.allsocketaddresses:
             if hospital_addr > intialize_req.selfsocketaddress:
+                #credentials = grpc.ssl_channel_credentials()
                 channel = grpc.insecure_channel(hospital_addr)
                 stub = federated_pb2_grpc.HospitalStub(channel)
                 shared_key_resp = stub.FetchSharedKey(federated_pb2.FetchSharedKeyReq())
