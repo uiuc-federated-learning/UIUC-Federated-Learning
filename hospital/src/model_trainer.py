@@ -34,6 +34,7 @@ class ModelTraining():
             ])
             train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transformation)
             test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=transformation)
+            self.parameters['batch_print_frequency'] = 500
         elif self.parameters['data_source'] == 'COVID':
             transformation = transforms.Compose([
                 transforms.Resize(224),
@@ -47,8 +48,11 @@ class ModelTraining():
             if len(train_dataset) == 0 or len(test_dataset) == 0:
                 print('COVID Dataset needs to be downloaded into the data/fedcovid directory.')
                 print('Download it at: https://drive.google.com/u/1/uc?id=1KLTZGOhxzczTXMFI4z6WlYLUC0VO_oGz&export=download')
+
         else:
             raise ValueError("Not a valid data_source type.")
+
+        self.parameters['batch_print_frequency'] = (len(train_dataset) //2) // 3
 
             # # Split the indices in a stratified way
             # trainindices = np.arange(len(test_dataset))

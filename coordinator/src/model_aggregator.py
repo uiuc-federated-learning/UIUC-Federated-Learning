@@ -40,18 +40,23 @@ class ModelAggregator():
             self.example_input = torch.ones((self.parameters['train_batch_size'],1,28,28))
         elif self.parameters['model'] == 'CNN' and self.parameters['data_source'] == 'MNIST':
             self.global_model = CNNMnist(self.parameters['seed'])
-        elif self.parameters['model'] == 'DENSENET':
+        elif self.parameters['model'] == 'DENSENET' and self.parameters['data_source'] == 'COVID':
             self.global_model = torchvision.models.densenet121(pretrained=True)
             # Fine tune
             for param in self.global_model.parameters():
-                param.requires_grad = False
+                param.requires_grad = False if self.parameters['finetune'] else True
             num_ftrs = self.global_model.classifier.in_features
             self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
-            
-            if self.parameters['data_source'] == 'COVID':
-                self.global_model.classifier = nn.Linear(num_ftrs, 2)
-            elif self.parameters['data_source'] == 'MNIST':
-                self.global_model.classifier = nn.Linear(num_ftrs, 10)
+            self.global_model.classifier = nn.Linear(num_ftrs, 2)
+        elif self.parameters['model'] == 'RESNET' and self.parameters['data_source'] == 'COVID':
+            self.global_model = torchvision.models.resnet101(pretrained=True)
+            # Fine tune
+            print(self.global_model.parameters())
+            for param in self.global_model.parameters():
+                param.requires_grad = False if self.parameters['finetune'] else True
+            num_ftrs = self.global_model.fc.in_features
+            self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
+            self.global_model.fc = nn.Linear(num_ftrs, 2)
         else:
             raise ValueError('Check the model and data source provided in the arguments.')
 
@@ -69,18 +74,8 @@ class ModelAggregator():
             for idx, i in enumerate(self.c):
                 self.c[idx][k] = torch.zeros(self.global_weights[k].shape, dtype=self.global_weights[k].dtype)
 
-    def shift_weights(self,state_dict, shift_amount):
-        power = (1<<shift_amount)
 
-        for key, value in state_dict.items():
-            # new_tensor = torch.zeros(value.shape, dtype=torch.float64)
-            # dims_to_evaluate = [list(range(dim)) for dim in value.shape]
-            # tups = [x for x in itertools.product(*dims_to_evaluate)]
-            # for tup in tups:
-            #     new_tensor[tup] = float(state_dict[key][tup])/power
-            # state_dict[key] = new_tensor
 
-            state_dict[key] = state_dict[key].float() / power
 
 
     def add_hospital_data(self, weights, local_size):
@@ -88,9 +83,6 @@ class ModelAggregator():
         self.local_sizes.append(local_size)
     
     def aggregate(self):
-        # if self.parameters['shift_amount'] != 0:
-        #     for weights in self.local_weights:
-        #         self.shift_weights(weights, self.parameters['shift_amount'])
         gw = copy.deepcopy(self.global_weights)
         
         self.global_model.load_state_dict(gw)
@@ -100,7 +92,7 @@ class ModelAggregator():
                                             self.parameters['eps'], self.epoch+1)
 
         start = time()
-        self.shift_weights(self.global_weights, self.parameters['shift_amount'])
+        # self.interpret_weights(self.global_weights, self.parameters['shift_amount'])
         end = time()
         print(f'Shifting weights took {end-start} seconds')
 

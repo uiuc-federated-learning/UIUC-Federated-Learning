@@ -2,14 +2,14 @@
 
 ```
 cd hospital
-python hospital.py --port=<PORT_NUMBER>
+python3 hospital.py --port=<PORT_NUMBER>
 ```
 
 ### Run the coordinator locally
 
 ```
 cd coordinator
-python coordinator.py --ports 8001 8002
+python3 coordinator.py
 ```
 
 ### Rebuild generated files using this command 
