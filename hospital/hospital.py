@@ -13,6 +13,8 @@ from time import time
 
 from randomgen import AESCounter
 from numpy.random import Generator
+from datetime import datetime
+import os
 
 import federated_pb2
 import federated_pb2_grpc
@@ -27,6 +29,9 @@ warnings.filterwarnings("ignore")
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
 BITS = 64
+
+save_folder = ""
+global_epoch = 0
 
 def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
@@ -54,6 +59,8 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         self.positive_keys = []
         self.negative_keys = []
         self.parameters = dict()
+        self.save_folder = ""
+        self.global_epoch = 0
 
     def Initialize(self, intialize_req, context):
         print('Initialize called')
@@ -70,6 +77,12 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
                 shared_key = int(shared_key_resp.key)
                 self.positive_keys.append(shared_key)
         
+        self.save_folder = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        if not os.path.exists(f'checkpoints/' + self.save_folder):
+            os.makedirs(f'checkpoints/' + self.save_folder)
+    
+        self.global_epoch = 0
+
         return federated_pb2.InitializeResp()
         
     def FetchSharedKey(self, fetch_shared_key_req, context):
@@ -78,9 +91,11 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
-        print('\n\nStarting local training')
+        print('\n\nStarting global epoch', self.global_epoch+1)
         
         global_model = pickle.loads(global_model.model_obj)
+
+        torch.save(global_model, f'./checkpoints/' + self.save_folder + f'/prefinetuned_epoch{self.global_epoch}.pth')
         
         local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
 
@@ -92,6 +107,10 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         
+        torch.save(local_model, f'./checkpoints/' + self.save_folder + f'/postfinetuned_epoch{self.global_epoch}.pth')
+
+        self.global_epoch += 1
+
         return local_model
 
 def serve():
@@ -99,6 +118,7 @@ def serve():
         ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
         ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH)
     ])
+
     federated_pb2_grpc.add_HospitalServicer_to_server(Hospital(), server)
     parser = Parser()
     parameters = parser.parse_arguments(open('system_config.json', 'r').read())

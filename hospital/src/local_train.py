@@ -119,7 +119,7 @@ class LocalUpdate(object):
 		epoch_loss = []
 							 
 		for epoch in range(epochs):
-			print("\nStarting epoch",epoch+1)
+			print("\nStarting local epoch",epoch+1)
 			batch_loss = []
 			
 			for batch_idx, (images, labels) in enumerate(self.train_loader):
