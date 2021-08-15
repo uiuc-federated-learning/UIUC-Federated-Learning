@@ -30,9 +30,6 @@ warnings.filterwarnings("ignore")
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
 BITS = 64
 
-save_folder = ""
-global_epoch = 0
-
 def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
 
@@ -95,7 +92,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         
         global_model = pickle.loads(global_model.model_obj)
 
-        torch.save(global_model, f'./checkpoints/' + self.save_folder + f'/prefinetuned_epoch{self.global_epoch}.pth')
+        torch.save(global_model, f'./checkpoints/' + self.save_folder + f'/prefinetuned_epoch{self.global_epoch+1}.pth')
         
         local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
 
@@ -107,7 +104,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         
-        torch.save(local_model, f'./checkpoints/' + self.save_folder + f'/postfinetuned_epoch{self.global_epoch}.pth')
+        torch.save(local_model, f'./checkpoints/' + self.save_folder + f'/postfinetuned_epoch{self.global_epoch+1}.pth')
 
         self.global_epoch += 1
 
