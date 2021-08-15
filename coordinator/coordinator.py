@@ -9,6 +9,7 @@ import io
 from time import time
 import copy
 import os
+from datetime import datetime
 
 from src.model_aggregator import ModelAggregator
 from src.flag_parser import Parser
@@ -19,19 +20,18 @@ from datetime import datetime
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
 INT_MAX = 2147483647
+save_folder = ""
 
 save_folder = ""
 
 def iterate_global_model(aggregator, remote_addresses, ports):
     remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
-    print(remote_addresses)
+    print("Remote addresses:", remote_addresses)
 
     if os.environ.get('https_proxy'):
         del os.environ['https_proxy']
     if os.environ.get('http_proxy'):
         del os.environ['http_proxy']
-    #unset http_proxy
-    #unset https_proxy
 
     thread_list = []
     for i in range(len(remote_addresses)):
@@ -56,7 +56,6 @@ def iterate_global_model(aggregator, remote_addresses, ports):
         
         print("Completed epoch %d. Aggregated all model weights." % (epoch+1))
         torch.save(aggregator.global_model, f'./checkpoints/' + save_folder + f'/aggregated_{parameters["model"]}_epoch{epoch}.pth')
-
             
     print('Completed all epochs!')
 
@@ -81,7 +80,7 @@ def train_hospital_model(hospital_address, global_model, traced_model_bytes, all
     ])
     stub = federated_pb2_grpc.HospitalStub(channel)
     
-    print('Calling the gRPC endpoint')
+    print('\nCalling the gRPC endpoint for epoch', epoch)
     start = time()
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(global_model), traced_model=None))
     aggregator.add_hospital_data(pickle.loads(hospital_model.model.model_obj), hospital_model.training_samples)

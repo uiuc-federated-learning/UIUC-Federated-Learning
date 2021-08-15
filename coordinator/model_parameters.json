@@ -17,7 +17,7 @@
 	"frac_clients" : 1,
 	"global_lr" : 1,
 	"local_optimizer" : "sgd",
-	"local_lr" : 0.01,
+	"local_lr" : 0.005,
 	"momentum" : 0,
 	"mu" : 0.1,
 	"beta1" : 0.9,
@@ -33,7 +33,7 @@
 	"trim_ratio" : 0.2,
 	"multi_krum" : 5,
 	"users_per_group":4,
-	"global_momentum_param":0.8,
+	"global_momentum_param":0,
 	"global_print_frequency" : 1,
 	"global_store_frequency" : 10,
 	"threshold_test_metric": 0.95
