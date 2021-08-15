@@ -55,7 +55,7 @@ def test_inference(global_model, test_dataset, device, test_batch_size=128):
 	"""
 
 	test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False)
-	criterion = nn.NLLLoss().to(device)
+	criterion = nn.CrossEntropyLoss().to(device)
 	global_model.eval()
 
 	loss, total, correct = 0.0, 0.0, 0.0

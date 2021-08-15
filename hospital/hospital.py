@@ -33,7 +33,6 @@ def shift_weights(state_dict, shift_amount):
 
     for key, value in state_dict.items():
         state_dict[key] = (state_dict[key].double()*power).long().cpu()
-        #state_dict[key] = state_dict[key].int()
     
     
 
@@ -44,22 +43,10 @@ def mask_weights(local_model_obj, positive_keys, negative_keys):
             aes_ctr = Generator(AESCounter(key))
             for layer_name in local_model_obj.keys():
                 random_mask = aes_ctr.integers(-(2**(BITS-1)), (2**(BITS-1)) - 1, local_model_obj[layer_name].shape)
-                #random_mask = aes_ctr.integers(0, 2**BITS, local_model_obj[layer_name].shape)
 
-                local_model_obj[layer_name] = local_model_obj[layer_name].long().cpu() # Convert to int
-                # print("Random mask type:", type(random_mask[0][0][0]))
+                local_model_obj[layer_name] = local_model_obj[layer_name].long().cpu()
                 
                 local_model_obj[layer_name] += multiplier * random_mask
-                
-                # local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
-
-                # only_positive = torch.mul(local_model_obj[layer_name].ge(0), local_model_obj[layer_name])
-                # only_negative = torch.mul(local_model_obj[layer_name].le(0), local_model_obj[layer_name]+(2**BITS))
-                # local_model_obj[layer_name] = only_positive + only_negative
-
-                # assert(torch.min(local_model_obj[layer_name]) >= 0)
-
-                # local_model_obj[layer_name] = torch.fmod(local_model_obj[layer_name], 2**BITS)
 
                 
 class Hospital(federated_pb2_grpc.HospitalServicer):
@@ -77,7 +64,6 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
         for hospital_addr in intialize_req.allsocketaddresses:
             if hospital_addr > intialize_req.selfsocketaddress:
-                #credentials = grpc.ssl_channel_credentials()
                 channel = grpc.insecure_channel(hospital_addr)
                 stub = federated_pb2_grpc.HospitalStub(channel)
                 shared_key_resp = stub.FetchSharedKey(federated_pb2.FetchSharedKeyReq())
@@ -92,25 +78,18 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
-        print('ComputeUpdatedModel called')
-        # Load ScriptModule from io.BytesIO object
+        print('\n\nStarting local training')
+        
         global_model = pickle.loads(global_model.model_obj)
         
         local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
 
         print('Shifting weights')
-        start = time()
         shift_weights(local_model_obj, self.parameters['shift_amount'])
-        end = time()
-        print(f'Shifting weights took {end-start} seconds')
+        
         print('Masking weights')
-        start = time()
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)
-        end = time()
-        print(f'Masking weights took {end-start} seconds')
-
-
-        # print(f'Sending Model:\n{local_model_obj}')
+        
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         
         return local_model
@@ -126,7 +105,7 @@ def serve():
     port = parameters['port']
     server.add_insecure_port('[::]:' + str(port))
     server.start()
-    print("Serving")
+    print("Serving on port", port)
     server.wait_for_termination()
 
 if __name__ == "__main__":
