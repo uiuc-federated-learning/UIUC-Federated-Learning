@@ -42,28 +42,15 @@ class ModelTraining():
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
-            train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'train'), transform=transformation)
-            test_dataset = datasets.ImageFolder(os.path.join(data_dir, 'fedcovid', 'test'), transform=transformation)
+            train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'train'), transform=transformation)
+            test_dataset = datasets.ImageFolder(os.path.join(data_dir, 'test'), transform=transformation)
 
             if len(train_dataset) == 0 or len(test_dataset) == 0:
-                print('COVID Dataset needs to be downloaded into the data/fedcovid directory.')
-                print('Download it at: https://drive.google.com/u/1/uc?id=1KLTZGOhxzczTXMFI4z6WlYLUC0VO_oGz&export=download')
-
+                raise ValueError("Dataset is empty.")
         else:
             raise ValueError("Not a valid data_source type.")
 
         self.parameters['batch_print_frequency'] = (len(train_dataset) //2) // 3
-
-            # # Split the indices in a stratified way
-            # trainindices = np.arange(len(test_dataset))
-            # train_indices, _ = train_test_split(trainindices, train_size=100, stratify=train_dataset.targets)
-
-            # testindices = np.arange(len(test_dataset))
-            # test_indices, _ = train_test_split(testindices, train_size=100, stratify=test_dataset.targets)
-
-            # # Warp into Subsets and DataLoaders
-            # train_dataset = Subset(train_dataset, train_indices)
-            # test_dataset = Subset(test_dataset, test_indices)
 
         print("Train and Test Sizes for %s - (%d, %d)"%(self.parameters['data_source'], len(train_dataset), len(test_dataset)))
         return train_dataset, test_dataset
@@ -123,7 +110,6 @@ class ModelTraining():
     
     def ComputeUpdatedModel(self, model_obj, modelbuffer):
         ################################# Client Sampling & Local Training #################################
-        # global_model = pickle.loads(model_obj)
         global_model = model_obj
         global_model.train()
         
@@ -153,11 +139,9 @@ class ModelTraining():
 
         self.c = c_new
         
-
-        # control_updates.append(c_update)
         local_losses.append(loss)
         local_sizes.append(local_size)
-        # print('local losses: {}'.format(local_losses))
+        
         self.train_loss_updated.append(sum(local_losses)/len(local_losses)) # Appending global training loss
         self.accuracy(global_model, self.epoch)
         

@@ -119,15 +119,10 @@ class LocalUpdate(object):
 		epoch_loss = []
 							 
 		for epoch in range(epochs):
-			print(epoch)
+			print("\nStarting local epoch",epoch+1)
 			batch_loss = []
 			
 			for batch_idx, (images, labels) in enumerate(self.train_loader):
-				
-				# Label flip attack
-				if self.attack == 'label_flip':
-					labels = (self.num_classes - 1) - labels # Assuming labels are 0 to (snum_classes - 1)
-
 				images, labels = images.to(self.device), labels.to(self.device)
 				local_model.zero_grad()
 				log_probs = local_model(images)

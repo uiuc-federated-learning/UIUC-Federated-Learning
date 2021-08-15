@@ -16,27 +16,13 @@ from src.flag_parser import Parser
 from src.models import MLP
 import federated_pb2
 import federated_pb2_grpc
+from datetime import datetime
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
 INT_MAX = 2147483647
 save_folder = ""
 
-def get_jitted_model_bytes(model, example_input):
-    # The example input just needs to take the same shape as what we are passing into the network when training.
-    print('Tracing model')
-    start = time()
-    trace = torch.jit.trace(aggregator.global_model, aggregator.example_input)
-    end = time()
-    print('Traced model in {} seconds'.format(end - start,))
-
-    print('Saving model')   
-    start = time()
-    buffer = io.BytesIO()
-    torch.jit.save(trace, buffer)
-    end = time()
-    print('Saved model in {} seconds'.format(end - start))
-
-    return buffer.getvalue()
+save_folder = ""
 
 def iterate_global_model(aggregator, remote_addresses, ports):
     remote_addresses = ["localhost:" + str(port) for port in ports] if remote_addresses == [] else remote_addresses
@@ -58,7 +44,6 @@ def iterate_global_model(aggregator, remote_addresses, ports):
     print("Done Init")
 
     for epoch in range(parameters['global_epochs']):
-        # buffer_bytes = get_jitted_model_bytes(aggregator.global_model, aggregator.example_input)
         thread_list = []
         for i in range(len(remote_addresses)):
             thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], aggregator.global_model, None, remote_addresses, epoch))
@@ -68,11 +53,11 @@ def iterate_global_model(aggregator, remote_addresses, ports):
             thread.join()
     
         aggregator.aggregate()
-        # print(f"Aggregated model: {aggregator.global_model.state_dict()}")
-        print("Completed epoch %d. Aggregated all model weights." % (epoch))
-        torch.save(aggregator.global_model, f'./checkpoints/' + save_folder + f'/aggregated_{parameters["model"]}_epoch{epoch}.pts')
-    
-    print('Completed all epochs.')
+        
+        print("Completed epoch %d. Aggregated all model weights." % (epoch+1))
+        torch.save(aggregator.global_model, f'./checkpoints/' + save_folder + f'/aggregated_{parameters["model"]}_epoch{epoch}.pth')
+            
+    print('Completed all epochs!')
 
 def initialize_hospital(client_num, hospital_address, all_addresses):
     print("Attempting to connenct to", hospital_address)
@@ -91,9 +76,7 @@ def train_hospital_model(hospital_address, global_model, traced_model_bytes, all
     # credentials = grpc.ssl_channel_credentials()
     channel = grpc.insecure_channel(hospital_address, options=[
         ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
-        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
-        # ("grpc.max_connection_age_ms", INT_MAX), 
-        # ("grpc.max_connection_idle_ms", INT_MAX)
+        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH)
     ])
     stub = federated_pb2_grpc.HospitalStub(channel)
     
