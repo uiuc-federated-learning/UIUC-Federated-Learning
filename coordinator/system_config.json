@@ -1,5 +1,4 @@
 {
-    "ports": [8001, 8002],
     "global_epochs": 10,
     "shift_amount": 24,
     "global_optimizer": "simpleavg"
