@@ -45,6 +45,7 @@ def iterate_global_model(aggregator, remote_addresses, ports):
 
     for epoch in range(parameters['global_epochs']):
         thread_list = []
+        print("")
         for i in range(len(remote_addresses)):
             thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], aggregator.global_model, None, remote_addresses, epoch))
             thread_list.append(thread)
@@ -80,7 +81,7 @@ def train_hospital_model(hospital_address, global_model, traced_model_bytes, all
     ])
     stub = federated_pb2_grpc.HospitalStub(channel)
     
-    print('\nCalling the gRPC endpoint for epoch', epoch)
+    print('Calling the gRPC endpoint for ' + hospital_address + ' epoch ' + str(epoch + 1))
     start = time()
     hospital_model = stub.ComputeUpdatedModel(federated_pb2.Model(model_obj=pickle.dumps(global_model), traced_model=None))
     aggregator.add_hospital_data(pickle.loads(hospital_model.model.model_obj), hospital_model.training_samples)
