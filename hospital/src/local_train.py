@@ -21,12 +21,9 @@ def iid(dataset, num_users, seed):
 	np.random.seed(seed)
 	
 	num_items = int(len(dataset) / num_users)
-	rem_items = len(dataset) % num_users
-	if rem_items == 0:
-		print("Each user will get %d samples from the training set."%(num_items))
-	else:
-		print("Each user will get %d samples from the training set. %d samples are discarded."%(num_items, rem_items))
-
+	
+	print("Training on %d samples from the training set."%(num_items))
+	
 	user_groups = {} 
 	all_idxs = list(range(len(dataset)))
 	
@@ -71,7 +68,7 @@ class LocalUpdate(object):
 		self.criterion = nn.CrossEntropyLoss().to(self.device)
 
 
-		self.train_loader = create_federated_dataloader(train_dataset, self.train_batch_size, 0, num_clients, client_num)
+		self.train_loader = create_federated_dataloader(train_dataset, self.train_batch_size, 0, 1, 0)
 		self.test_loader = DataLoader(test_dataset, batch_size=self.test_batch_size)
 
 	def local_opt(self, optimizer, lr, epochs, global_model, modelbuffer, momentum=0, mu=0.01, client_controls=[], 
