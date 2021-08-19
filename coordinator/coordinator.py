@@ -97,7 +97,7 @@ if __name__ == "__main__":
     parser = Parser()
     parameters = parser.parse_arguments()
 
-    save_folder = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    save_folder = datetime.now().strftime("%d-%m-%Y_%H:%M:%S")
     if not os.path.exists(f'checkpoints/' + save_folder):
         os.makedirs(f'checkpoints/' + save_folder)
 

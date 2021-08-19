@@ -45,15 +45,21 @@ class ModelAggregator():
             # Fine tune
             for param in self.global_model.parameters():
                 param.requires_grad = False if self.parameters['finetune'] else True
+
             num_ftrs = self.global_model.classifier.in_features
             self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
             self.global_model.classifier = nn.Linear(num_ftrs, 2)
+
+            if self.parameters['checkpoint'] != "":
+                self.global_model = torch.load(self.parameters['checkpoint'])
+
         elif self.parameters['model'] == 'RESNET' and self.parameters['data_source'] == 'COVID':
             self.global_model = torchvision.models.resnet101(pretrained=True)
             # Fine tune
-            print(self.global_model.parameters())
+
             for param in self.global_model.parameters():
                 param.requires_grad = False if self.parameters['finetune'] else True
+
             num_ftrs = self.global_model.fc.in_features
             self.example_input = torch.ones((self.parameters['train_batch_size'],3,224,224))
             self.global_model.fc = nn.Linear(num_ftrs, 2)
@@ -69,8 +75,6 @@ class ModelAggregator():
         ############################ Initializing Placeholder ############################
 
         for k in self.global_weights.keys():
-            #v[k] = torch.zeros(global_weights[k].shape, dtype=global_weights[k].dtype)
-            #m[k] = torch.zeros(global_weights[k].shape, dtype=global_weights[k].dtype)
             for idx, i in enumerate(self.c):
                 self.c[idx][k] = torch.zeros(self.global_weights[k].shape, dtype=self.global_weights[k].dtype)
 
@@ -90,11 +94,6 @@ class ModelAggregator():
         self.global_weights = global_aggregate(self.parameters['global_optimizer'], self.global_weights, self.local_weights, self.local_sizes,
                                             self.parameters['global_momentum_param'], self.parameters['global_lr'], self.parameters['beta1'], self.parameters['beta2'],
                                             self.parameters['eps'], self.epoch+1)
-
-        start = time()
-        # self.interpret_weights(self.global_weights, self.parameters['shift_amount'])
-        end = time()
-        print(f'Shifting weights took {end-start} seconds')
 
         self.epoch += 1
         self.global_model.load_state_dict(self.global_weights)

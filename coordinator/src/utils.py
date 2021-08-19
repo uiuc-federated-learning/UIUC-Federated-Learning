@@ -9,20 +9,10 @@ from torch.utils.data import Dataset, DataLoader
 BITS = 64
 
 def interpret_weights(state_dict, new_dict, shift_amount):
-
-	#for key, value in state_dict.items():
-		# print("TYPE", type(state_dict[key][0][0][0][0]), state_dict[key].shape)
-		# if (key == "features.norm0.weight"): print("Preshift weights (no mod):", state_dict[key][:10])
-		# state_dict[key] = torch.fmod(state_dict[key], 2**BITS)
-		#z_positive = torch.mul(state_dict[key].le(2**(BITS-1)), state_dict[key])
-		#z_negative = torch.mul(state_dict[key].ge(2**(BITS-1)), state_dict[key] - 2**BITS)
-
-		#state_dict[key] = z_positive + z_negative
 	power = (1<<shift_amount)
 
 	for key, value in state_dict.items():
 		new_dict[key] = (state_dict[key].double() / power).float()
-	# return new_dict
 
 
 def global_aggregate(global_optimizer, global_weights, local_updates, local_sizes, alpha,
