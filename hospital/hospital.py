@@ -109,6 +109,7 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
 
         self.global_epoch += 1
 
+        print('Sending local model')
         return local_model
 
 def serve():
