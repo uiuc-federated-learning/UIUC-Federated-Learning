@@ -45,6 +45,7 @@ def iterate_global_model(aggregator, remote_addresses, ports):
 
     for epoch in range(parameters['global_epochs']):
         thread_list = []
+        print("")
         for i in range(len(remote_addresses)):
             thread = threading.Thread(target=train_hospital_model, args=(remote_addresses[i], aggregator.global_model, None, remote_addresses, epoch))
             thread_list.append(thread)
