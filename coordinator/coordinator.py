@@ -20,7 +20,6 @@ from datetime import datetime
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
 INT_MAX = 2147483647
-save_folder = ""
 
 save_folder = ""
 
