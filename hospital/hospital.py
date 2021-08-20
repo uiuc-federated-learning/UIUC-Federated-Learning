@@ -28,13 +28,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 MAX_MESSAGE_LENGTH = 1000000000 # 1GB maximum model size (message size)
-BITS = 62
+BITS = 64
 
 def shift_weights(state_dict, shift_amount):
     power = (1<<shift_amount)
 
     for key, value in state_dict.items():
         state_dict[key] = (state_dict[key].double()*power).long().cpu()
+    
     
 
 def mask_weights(local_model_obj, positive_keys, negative_keys):
@@ -87,7 +88,6 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         return federated_pb2.FetchSharedKeyResp(key=str(shared_key))
 
     def ComputeUpdatedModel(self, global_model, context):
-      
         print('\n\nStarting global epoch', self.global_epoch+1)
         
         global_model = pickle.loads(global_model.model_obj)
@@ -96,13 +96,12 @@ class Hospital(federated_pb2_grpc.HospitalServicer):
         
         local_model_obj, train_samples = self.model_trainer.ComputeUpdatedModel(global_model, None)
 
-
         print('Shifting weights')
         shift_weights(local_model_obj, self.parameters['shift_amount'])
         
         print('Masking weights')
         mask_weights(local_model_obj, self.positive_keys, self.negative_keys)
-
+        
         local_model = federated_pb2.TrainedModel(model=federated_pb2.Model(model_obj=pickle.dumps(local_model_obj)), training_samples=train_samples)
         
         torch.save(local_model, f'./checkpoints/' + self.save_folder + f'/postfinetuned_epoch{self.global_epoch+1}.pth')
@@ -125,7 +124,6 @@ def serve():
     server.add_insecure_port('[::]:' + str(port))
     server.start()
     print("Serving on port", port)
-
     server.wait_for_termination()
 
 if __name__ == "__main__":
